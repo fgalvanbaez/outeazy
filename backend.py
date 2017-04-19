@@ -94,6 +94,7 @@ class appBackend(ApplicationSession):
     @wamp.register(u"io.crossbar.app.updatetask")
     def submittask(self, JSONobjectID, JSONobject):
 
+
         #Añadir el elemento la variable de python
         self._task[JSONobjectID] = JSONobject
 
