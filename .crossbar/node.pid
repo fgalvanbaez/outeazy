@@ -1,19 +1,19 @@
 {
+    "options": {
+        "loglevel": "info", 
+        "cbdir": "/home/usuario/Documentos/project_polymer/new_project/outeazy/.crossbar", 
+        "config": "config.json", 
+        "personality": "community", 
+        "command": "start", 
+        "logdir": null, 
+        "reactor": null, 
+        "logformat": "standard", 
+        "colour": "auto", 
+        "logtofile": false
+    }, 
+    "pid": 5449, 
     "argv": [
         "/home/usuario/Documentos/project_polymer/new_project/venv/bin/crossbar", 
         "start"
-    ], 
-    "pid": 4124, 
-    "options": {
-        "logformat": "standard", 
-        "personality": "community", 
-        "logdir": null, 
-        "colour": "auto", 
-        "command": "start", 
-        "loglevel": "info", 
-        "reactor": null, 
-        "logtofile": false, 
-        "cbdir": "/home/usuario/Documentos/project_polymer/new_project/outeazy/.crossbar", 
-        "config": "config.json"
-    }
+    ]
 }

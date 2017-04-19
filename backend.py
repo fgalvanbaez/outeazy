@@ -29,6 +29,7 @@
 from twisted.internet.defer import inlineCallbacks
 from autobahn import wamp
 from autobahn.twisted.wamp import ApplicationSession
+#from autobahn.asincio.wamp import ApplicationSession
 from twisted.internet import reactor
 
 import json
@@ -94,7 +95,6 @@ class appBackend(ApplicationSession):
     @wamp.register(u"io.crossbar.app.updatetask")
     def submittask(self, JSONobjectID, JSONobject):
 
-
         #Añadir el elemento la variable de python
         self._task[JSONobjectID] = JSONobject
 
@@ -115,8 +115,28 @@ class appBackend(ApplicationSession):
 
     @inlineCallbacks
     def onJoin(self, details):
+
+        def onconnect(msg):
+            self._visitors += 1
+            self.publish('io.crossbar.app.visitorupdate', [self._visitors])
+            return self._visitors
+
+        self.subscribe(onconnect, "wamp.session.on_join")
+
+        def ondisconnect(msg):
+            self._visitors -= 1
+            if self._visitors < 0:
+                self._visitors = 0;
+            self.publish('io.crossbar.app.visitorupdate', [self._visitors])
+            return self._visitors
+
+        self.subscribe(ondisconnect, "wamp.session.on_leave")
+
+
         res = yield self.register(self)
         print("appBackend: {} procedures registered!".format(len(res)))
 
-    def onLeave(self, details):
-        print(details)
+
+
+    def onLeave(self, session):
+        print("A connection has been lost")

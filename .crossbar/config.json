@@ -16,21 +16,30 @@
                         {
                             "name": "anonymous",
                             "permissions": [
-                                {
-                                    "uri": "io.crossbar.app.",
-                                    "match": "prefix",
-                                    "allow": {
-                                        "call": true,
-                                        "register": true,
-                                        "publish": true,
-                                        "subscribe": true
-                                    },
-                                    "disclose": {
-                                        "caller": false,
-                                        "publisher": false
-                                    },
-                                    "cache": true
+                              {
+                                "uri": "*",
+                                "allow": {
+                                  "call": true,
+                                  "register": false,
+                                  "subscribe": true,
+                                  "publish": false
                                 }
+                              },
+                              {
+                                  "uri": "io.crossbar.app.",
+                                  "match": "prefix",
+                                  "allow": {
+                                      "call": true,
+                                      "register": true,
+                                      "publish": true,
+                                      "subscribe": true
+                                  },
+                                  "disclose": {
+                                      "caller": false,
+                                      "publisher": false
+                                  },
+                                  "cache": true
+                              }
                             ]
                         }
                     ]
