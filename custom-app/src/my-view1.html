@@ -1,0 +1,298 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+
+<dom-module id="my-view1">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+
+      /* Prevent the text contents of draggable elements from being selectable. */
+      [draggable] {
+        -moz-user-select: none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+        /* Required to make elements draggable in old WebKit */
+        -khtml-user-drag: element;
+        -webkit-user-drag: element;
+      }
+
+    </style>
+
+
+    <div class="card">
+      <div id="counter" class="circle"></div>
+      <input id="task-input" type="text" class="" placeholder="Nueva tarea"></input>
+      <input class="boton" id="btn-agregar" value="+" type="button"></input>
+    </div>
+
+    <div id="task-list">
+    </div>
+
+  </template>
+
+  /*CREACION DEL WEBSOCKET*/
+  <script>AUTOBAHN_DEBUG = true;</script>
+  <script src="../bower_components/autobahnjs/autobahn.min.js"></script>
+
+  <!-- JS para evitar los errores de valores cíclicos -->
+  <script src="../bower_components/domjson/dist/domJSON.min.js"></script>
+
+  <script>
+    class MyView1 extends Polymer.Element {
+      static get is() { return 'my-view1'; }
+
+      constructor(){
+        super();
+        console.log(this.localName + '#' + 'constructor');
+      }
+
+      ready(){
+        super.ready();
+        console.log(this.localName + '#' + 'ready');
+      }
+
+      connectedCallback() {
+
+        super.connectedCallback();
+        console.log(this.localName + '#' + 'connectedCallback');
+
+        //Conexion del websocket
+        var url;
+        if (document.location.origin == "file://") {
+           url = "ws://127.0.0.1:8080/ws";
+        } else {
+           url = (document.location.protocol === "http:" ? "ws:" : "wss:") + "//" +
+                       document.location.host + "/ws";
+        }
+        var connection = new autobahn.Connection({
+           //url: url,
+           transports: [
+             {
+               'type': 'websocket',
+               'url': url
+             },
+           ],
+           realm: "realm1"
+        });
+        var connection = new autobahn.Connection({
+           url: "ws://localhost:8080/ws",
+           realm: "realm1"
+        });
+
+
+        // Variables
+        //var lista = document.getElementById("lista");
+        var id = 0;
+        var lista = document.getElementById("task-list");
+        var tareaInput = document.getElementById("task-input");
+        var btnNuevaTarea = document.getElementById("btn-agregar");
+        var visitors = document.getElementById("counter");
+        var dragSrcEl = null;
+
+
+        //Funciones para que las tareas sean DnD
+        /*function handleDragStart(e) {
+          this.style.opacity = '0.4';  // this / e.target is the source node.
+        }
+
+        function handleDragOver(e) {
+          if (e.preventDefault) {
+            e.preventDefault(); // Necessary. Allows us to drop.
+          }
+          e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+          return false;
+        }
+
+        function handleDragEnter(e) {
+          // this / e.target is the current hover target.
+          this.classList.add('over');
+        }
+
+        function handleDragLeave(e) {
+          this.classList.remove('over');  // this / e.target is previous target element.
+        }
+
+        function handleDrop(e) {
+          // this/e.target is current target element.
+          if (e.stopPropagation) {
+            e.stopPropagation(); // Stops some browsers from redirecting.
+          }
+          // Don't do anything if dropping the same column we're dragging.
+          if (dragSrcEl != this) {
+            // Set the source column's HTML to the HTML of the columnwe dropped on.
+            dragSrcEl.innerHTML = this.innerHTML;
+            this.innerHTML = e.dataTransfer.getData('text/html');
+          }
+
+          return false;
+        }
+
+        function handleDragEnd(e) {
+          // this/e.target is the source node.
+          while (lista.firstChild) {
+            lista.classList.remove('over');
+          }
+        }
+
+        function handleDragStart(e) {
+          // Target (this) element is the source node.
+          this.style.opacity = '0.4';
+
+          dragSrcEl = this;
+
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/html', this.innerHTML);
+        }*/
+
+
+        // Función para agregar tarea al DOM
+        var agregarTarea = function(contenido) {
+
+          console.log("El valor en tarea es: " + contenido);
+          var nuevaTarea = document.createElement("div");
+
+          //var index = document.createElement('<div class="circle" type="button"></div>')
+          //nuevaTarea.appendChild(index);
+
+          var valor = document.createTextNode(contenido);
+          nuevaTarea.appendChild(valor);
+
+
+          //var bin = document.createElement("<iron-icon icon='icons:delete'></iron-icon>");
+          /*var hijo = this;
+          bin.addEventListener('click', function(hijo) {
+            hijo.remove();
+          })
+          nuevaTarea.appendChild(bin);*/
+
+          //Debo actualizar ID cada vez que asigno una nueva tarea
+          id++;
+
+          // Asigno atributos
+          nuevaTarea.setAttribute("id", "task" + id);
+          nuevaTarea.setAttribute("class", "card");
+          nuevaTarea.setAttribute("draggable", "true");
+          // Agregamos la nueva tarea a la lista
+          //lista.appendChild(nuevaTarea);
+
+          console.log("El valor en tarea es1: " + contenido);
+          return nuevaTarea;
+        }
+
+        connection.onopen = function (session, details) {
+
+           console.log("Connected:", details);
+           session.log("Session open: ", session.id);
+
+           session.call("io.crossbar.app.getvisitors").then(
+             function(res) {
+               visitors.innerText = res
+             },
+             session.log)
+
+           session.subscribe("io.crossbar.app.visitorupdate",
+              function(args) {
+                visitors.innerText = args[0];
+              }
+            ).then(session.log);
+
+
+           //Obtengo las tareas actuales
+           session.call("io.crossbar.app.gettask").then(
+             function(res){
+               id = res[0];
+               alert("NUMERO DE TAREAS" + res[0]);
+               //Convierto str en JSON object
+               for (var x=0; x<id; x++) {
+
+                 //Convierto str a JSON object
+                 var myJSON = JSON.parse(res[1]["task"+x])
+                 //convierto el JSON object en un nodo del DOM
+                 session.log("JSON EN CALL" + myJSON);
+
+                 //JSON object a Node object
+                 lista.appendChild(domJSON.toDOM(myJSON));
+               }
+             }, session.log, session.log);
+
+          //Suscribo al cliente a la funcion onupdatetext(actualiza las lista)
+          session.subscribe("io.crossbar.app.onupdatetask",
+            function(args) {
+              var tasks = JSON.parse(args[0]);
+              lista.appendChild(domJSON.toDOM(tasks));
+              id = lista.childElementCount;
+            }).then(session.log, session.log);
+
+           console.log("listener");
+           btnNuevaTarea.addEventListener("click",
+           function(evt) {
+
+             if (tareaInput.value !== "") {
+               console.log("El valor es: " + tareaInput.value);
+
+               //alert(JSON.stringify(lista.childNodes));
+               //var lastChild = lista.childNodes[id];
+
+               //Creo la nueva tarea
+               var nodo = agregarTarea(tareaInput.value)
+
+               //Añado listeners DnD a la tarea
+               /*nodo.addEventListener('dragstart', handleDragStart, false);
+               nodo.addEventListener('dragenter', handleDragEnter, false);
+               nodo.addEventListener('dragover', handleDragOver, false);
+               nodo.addEventListener('dragleave', handleDragLeave, false);
+               nodo.addEventListener('drop', handleDrop, false);
+               nodo.addEventListener('dragend', handleDragEnd, false);*/
+
+               //inicializo el valor de la tarea de nuevo
+               tareaInput.value = "";
+
+               var myJSON = domJSON.toJSON(nodo);
+
+               //Convierto JSON object a String
+               myJSON = JSON.stringify(myJSON);
+
+               console.log("JSON EN UPDATETASK" + myJSON);
+
+                session.call("io.crossbar.app.updatetask",
+                [nodo.id, myJSON]).then(session.log, session.log);
+              }
+
+            });
+        };
+
+        connection.onclose = function (reason, details) {
+          while (lista.firstChild) {
+            lista.removeChild(lista.firstChild);
+          }
+         console.log("Connection lost: " + reason);
+        }
+        connection.open();
+
+      }
+
+      disconnectedCallback(){
+        super.disconnectedCallback();
+        console.log(this.localName + '#' + 'disconnectedCallback');
+      }
+
+    }
+
+    window.customElements.define(MyView1.is, MyView1);
+  </script>
+</dom-module>
