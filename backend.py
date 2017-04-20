@@ -36,55 +36,18 @@ import json
 
 class appBackend(ApplicationSession):
 
-    pass
-
     def __init__(self, config):
         ApplicationSession.__init__(self, config)
         self.init()
 
     def init(self):
-
-        """self._text = {
-            'inputText' : '',
-        }"""
-
         self._task = {}
         self._visitors = 0;
-
-
-    #TEXT
-    """@wamp.register(u'io.crossbar.app.gettext')
-    def gettext(self):
-        return {'inputText': self._text['inputText']}
-
-
-    @wamp.register(u"io.crossbar.app.updatetext")
-    def submittext(self, object):
-        self._text['inputText'] = object
-        result = {'inputText' : self._text['inputText']}
-        self.publish('io.crossbar.app.onupdatetext', result)
-        return result"""
-
 
     #VISITORS
     @wamp.register(u'io.crossbar.app.getvisitors')
     def getvisitor(self):
         return self._visitors
-
-    """@wamp.register(u"wamp.session.on_join")
-    def newConnect(self):
-        self._visitors += 1
-        self.publish('io.crossbar.app.visitorupdate', [self._visitors])
-        return self._visitors
-
-    @wamp.register(u"wamp.session.on_leave")
-    def disConnect(self):
-        self._visitors -= 1
-        if self._visitors < 0:
-            self._visitors = 0;
-        self.publish('io.crossbar.app.visitorupdate', [self._visitors])
-        return self._visitors"""
-
 
     #TASK
     @wamp.register(u'io.crossbar.app.gettask')
@@ -99,18 +62,8 @@ class appBackend(ApplicationSession):
         self._task[JSONobjectID] = JSONobject
 
         #Publico el JSON sin tratamiento hacia las demás instancias
-        self.publish('io.crossbar.app.onupdatetask', [JSONobject])
+        self.publish('io.crossbar.app.onupdatetask', [len(self._task), JSONobject])
         return self._task
-
-
-    """def onConnect(self):
-      print('Client session connected.')
-      self.join(self.config.realm)
-
-
-    def onDisconnect(self):
-      print('Client session disconnected.')
-      reactor.stop()"""
 
 
     @inlineCallbacks
@@ -121,7 +74,8 @@ class appBackend(ApplicationSession):
             self.publish('io.crossbar.app.visitorupdate', [self._visitors])
             return self._visitors
 
-        self.subscribe(onconnect, "wamp.session.on_join")
+        conn = yield self.subscribe(onconnect, "wamp.session.on_join")
+        print(conn)
 
         def ondisconnect(msg):
             self._visitors -= 1
@@ -130,7 +84,8 @@ class appBackend(ApplicationSession):
             self.publish('io.crossbar.app.visitorupdate', [self._visitors])
             return self._visitors
 
-        self.subscribe(ondisconnect, "wamp.session.on_leave")
+        disconn = yield self.subscribe(ondisconnect, "wamp.session.on_leave")
+        print(disconn)
 
 
         res = yield self.register(self)

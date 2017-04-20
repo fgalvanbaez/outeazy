@@ -35,8 +35,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 
     <div class="card">
-      <input id="task-input" type="text" class="" placeholder="Nueva tarea"></input>
+      <input id="task-input" type="text" class="fixed" placeholder="Nueva tarea"></input>
       <input class="boton" id="btn-agregar" value="Agregar tarea" type="button"></input>
+      <div id="numTasks" class="circle"></div>
       <div id="counter" class="circle"></div>
     </div>
 
@@ -87,11 +88,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                'url': url
              },
            ],
-           realm: "realm1"
+           realm: "public"
         });
         var connection = new autobahn.Connection({
            url: "ws://localhost:8080/ws",
-           realm: "realm1"
+           realm: "public"
         });
 
 
@@ -102,6 +103,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var tareaInput = document.getElementById("task-input");
         var btnNuevaTarea = document.getElementById("btn-agregar");
         var visitors = document.getElementById("counter");
+        var numTasks = document.getElementById("numTasks");
         var dragSrcEl = null;
 
 
@@ -180,9 +182,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           })
           nuevaTarea.appendChild(bin);*/
 
-          //Debo actualizar ID cada vez que asigno una nueva tarea
-          id++;
-
           // Asigno atributos
           nuevaTarea.setAttribute("id", "task" + id);
           nuevaTarea.setAttribute("class", "card");
@@ -190,50 +189,56 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           // Agregamos la nueva tarea a la lista
           //lista.appendChild(nuevaTarea);
 
+          //Finalmente debo actualizar ID cada vez que asigno una nueva tarea
+          id++;
+
           console.log("El valor en tarea es1: " + contenido);
           return nuevaTarea;
         }
 
         connection.onopen = function (session, details) {
+          console.log("Connected:", details);
+          session.log("Session open: ", session.id);
 
-           console.log("Connected:", details);
-           session.log("Session open: ", session.id);
+          //Get the visitors in a new connection
+          session.call("io.crossbar.app.getvisitors").then(
+            function(res) {
+              visitors.innerText = res
+            },
+            session.log)
 
-           session.call("io.crossbar.app.getvisitors").then(
-             function(res) {
-               visitors.innerText = res
-             },
-             session.log)
-
-           session.subscribe("io.crossbar.app.visitorupdate",
-              function(args) {
-                visitors.innerText = args[0];
-              }
-            ).then(session.log);
+          //Update visitors in new connections
+          session.subscribe("io.crossbar.app.visitorupdate",
+            function(args) {
+              visitors.innerText = args[0];
+            }
+          ).then(session.log);
 
 
-           //Obtengo las tareas actuales
-           session.call("io.crossbar.app.gettask").then(
-             function(res){
-               id = res[0];
-               alert("NUMERO DE TAREAS" + res[0]);
-               //Convierto str en JSON object
-               for (var x=0; x<id; x++) {
+          //Get tasks in a new conection
+          session.call("io.crossbar.app.gettask").then(
+           function(res){
+             id = res[0];
+             numTasks.innerText = res[0];
+             //alert("NUMERO DE TAREAS" + res[0]);
+             //Convierto str en JSON object
+             for (var x=0; x<id; x++) {
+               //Convierto str a JSON object
+               console.log("Este es mi str: " + res[1]["task"+x]);
+               var myJSON = JSON.parse(res[1]["task"+x]);
+               //convierto el JSON object en un nodo del DOM
+               session.log("JSON EN CALL" + myJSON);
 
-                 //Convierto str a JSON object
-                 var myJSON = JSON.parse(res[1]["task"+x])
-                 //convierto el JSON object en un nodo del DOM
-                 session.log("JSON EN CALL" + myJSON);
-
-                 //JSON object a Node object
-                 lista.appendChild(domJSON.toDOM(myJSON));
-               }
-             }, session.log, session.log);
+               //JSON object a Node object
+               lista.appendChild(domJSON.toDOM(myJSON));
+             }
+           }, session.log, session.log);
 
           //Suscribo al cliente a la funcion onupdatetext(actualiza las lista)
           session.subscribe("io.crossbar.app.onupdatetask",
             function(args) {
-              var tasks = JSON.parse(args[0]);
+              numTasks.innerText = args[0][0];
+              var tasks = JSON.parse(args[0][1]);
               lista.appendChild(domJSON.toDOM(tasks));
               id = lista.childElementCount;
             }).then(session.log, session.log);
@@ -279,6 +284,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         connection.onclose = function (reason, details) {
           while (lista.firstChild) {
             lista.removeChild(lista.firstChild);
+            numTasks.innerText = "0";
+            counter.innerText = "0";
           }
          console.log("Connection lost: " + reason);
         }

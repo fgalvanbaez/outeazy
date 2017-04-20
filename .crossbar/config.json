@@ -11,13 +11,13 @@
             },
             "realms": [
                 {
-                    "name": "realm1",
+                    "name": "public",
                     "roles": [
                         {
                             "name": "anonymous",
                             "permissions": [
                               {
-                                "uri": "*",
+                                "uri": "wamp.*",
                                 "allow": {
                                   "call": true,
                                   "register": false,
@@ -70,7 +70,7 @@
                 {
                     "type": "class",
                     "classname": "backend.appBackend",
-                    "realm": "realm1",
+                    "realm": "public",
                     "role": "anonymous"
                 }
             ]
