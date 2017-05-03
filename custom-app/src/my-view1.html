@@ -9,8 +9,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="shared-styles.html">
-<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+
 
 <dom-module id="my-view1">
   <template>
@@ -35,8 +38,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 
     <div class="card">
-      <input id="task-input" type="text" class="fixed" placeholder="Nueva tarea"></input>
-      <input class="boton" id="btn-agregar" value="Agregar tarea" type="button"></input>
+      <!--<input id="task-input" type="text" class="fixed" placeholder="Nueva tarea"></input>-->
+      <paper-input id="task-input" label="Introduzca tarea" required auto-validate error-message="Introduzca algún texto!!">
+        <iron-icon icon="mail" prefix></iron-icon>
+        <iron-icon icon="mail" suffix></div>
+      </paper-input>
+      <!--<input class="boton" id="btn-agregar" value="Agregar tarea" type="button"></input>-->
       <div id="numTasks" class="circle"></div>
       <div id="counter" class="circle"></div>
     </div>
@@ -48,11 +55,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   /*CREACION DEL WEBSOCKET*/
   <script>AUTOBAHN_DEBUG = true;</script>
+
+  <!-- Script para añadir autobahnhjs -->
   <script src="../bower_components/autobahnjs/autobahn.min.js"></script>
 
   <!-- JS para evitar los errores de valores cíclicos -->
   <script src="../bower_components/domjson/dist/domJSON.min.js"></script>
 
+  <!-- Script principal de Polymer -->
   <script>
     class MyView1 extends Polymer.Element {
       static get is() { return 'my-view1'; }
@@ -90,10 +100,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
            ],
            realm: "public"
         });
-        var connection = new autobahn.Connection({
+        /*var connection = new autobahn.Connection({
            url: "ws://localhost:8080/ws",
            realm: "public"
-        });
+        });*/
 
 
         // Variables
@@ -175,12 +185,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           nuevaTarea.appendChild(valor);
 
 
-          //var bin = document.createElement("<iron-icon icon='icons:delete'></iron-icon>");
-          /*var hijo = this;
-          bin.addEventListener('click', function(hijo) {
-            hijo.remove();
-          })
-          nuevaTarea.appendChild(bin);*/
+          var btn = document.createElement("paper-icon-button");
+          //var icon = document.createElement("iron-icons");
+          //icon.icon = "delete";
+          //btn.appendChild(icon);
+          btn.icon = "delete";
+          btn.addEventListener('click', function() {
+            this.parentNode.remove();
+          });
+          nuevaTarea.appendChild(btn);
 
           // Asigno atributos
           nuevaTarea.setAttribute("id", "task" + id);
@@ -279,18 +292,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               }
 
             });
-        };
+        }
 
         connection.onclose = function (reason, details) {
           while (lista.firstChild) {
             lista.removeChild(lista.firstChild);
             numTasks.innerText = "0";
             counter.innerText = "0";
-          }
+          };
          console.log("Connection lost: " + reason);
         }
-        connection.open();
 
+        connection.open();
       }
 
       disconnectedCallback(){
