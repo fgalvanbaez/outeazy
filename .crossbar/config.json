@@ -26,19 +26,19 @@
                                 }
                               },
                               {
-                                  "uri": "io.crossbar.app.",
-                                  "match": "prefix",
-                                  "allow": {
-                                      "call": true,
-                                      "register": true,
-                                      "publish": true,
-                                      "subscribe": true
-                                  },
-                                  "disclose": {
-                                      "caller": false,
-                                      "publisher": false
-                                  },
-                                  "cache": true
+                                "uri": "io.crossbar.app.",
+                                "match": "prefix",
+                                "allow": {
+                                    "call": true,
+                                    "register": true,
+                                    "publish": true,
+                                    "subscribe": true
+                                },
+                                "disclose": {
+                                    "caller": false,
+                                    "publisher": false
+                                },
+                                "cache": true
                               }
                             ]
                         }

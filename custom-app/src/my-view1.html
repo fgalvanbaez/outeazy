@@ -17,6 +17,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <dom-module id="my-view1">
   <template>
+
     <style include="shared-styles">
       :host {
         display: block;
@@ -36,24 +37,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     </style>
 
-
     <div class="card">
-      <!--<input id="task-input" type="text" class="fixed" placeholder="Nueva tarea"></input>-->
-      <paper-input id="task-input" label="Introduzca tarea" required auto-validate error-message="Introduzca algún texto!!">
-        <iron-icon icon="mail" prefix></iron-icon>
-        <iron-icon icon="mail" suffix></div>
+
+      <!--<input id="taskInput" class="taskInput" type="text" placeholder="Nueva tarea">-->
+      <paper-input id="taskInput" label="Introduzca tarea">
+        <paper-icon-button icon="mail" prefix></paper-icon-button>
+        <paper-icon-button icon="mail" suffix></paper-icon-button>
       </paper-input>
-      <!--<input class="boton" id="btn-agregar" value="Agregar tarea" type="button"></input>-->
-      <div id="numTasks" class="circle"></div>
-      <div id="counter" class="circle"></div>
+      <input id="btnAgregar" class="btnAgregar" value="Agregar tarea" type="button">
+      <div id="numTasks" class="numTasks circle"></div>
+      <div id="visitors" class="numTasks circle"></div>
+
     </div>
 
-    <div id="task-list">
-    </div>
+    <div id="taskList" class="taskList"></div>
 
   </template>
 
   /*CREACION DEL WEBSOCKET*/
+  <!-- Pongo autobahn en modo debug -->
   <script>AUTOBAHN_DEBUG = true;</script>
 
   <!-- Script para añadir autobahnhjs -->
@@ -78,12 +80,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       connectedCallback() {
-
         super.connectedCallback();
         console.log(this.localName + '#' + 'connectedCallback');
 
         //Conexion del websocket
-        var url;
+        /*var url;
         if (document.location.origin == "file://") {
            url = "ws://127.0.0.1:8080/ws";
         } else {
@@ -91,29 +92,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                        document.location.host + "/ws";
         }
         var connection = new autobahn.Connection({
-           //url: url,
+           url: url,
            transports: [
              {
                'type': 'websocket',
-               'url': url
+               'url': url,
              },
            ],
-           realm: "public"
-        });
-        /*var connection = new autobahn.Connection({
+           realm: "public",
+        });*/
+        var connection = new autobahn.Connection({
            url: "ws://localhost:8080/ws",
            realm: "public"
-        });*/
-
+        });
 
         // Variables
-        //var lista = document.getElementById("lista");
+        /*Polymer builds a static map of node IDs when the element initializes
+        its DOM template, to provide convenient access to frequently used nodes
+        without the need to query for them manually. Any node specified in the
+        element's template with an id is stored on the this.$ hash by id.*/
         var id = 0;
-        var lista = document.getElementById("task-list");
-        var tareaInput = document.getElementById("task-input");
-        var btnNuevaTarea = document.getElementById("btn-agregar");
-        var visitors = document.getElementById("counter");
-        var numTasks = document.getElementById("numTasks");
+        var lista = this.$.taskList;//document.getElementById("task-list");
+        var tareaInput = this.$.taskInput;//document.getElementById("task-input");
+        var btnNuevaTarea = this.$.btnAgregar//document.getElementById("btn-agregar");
+        var visitors = this.$.visitors;//document.getElementById("visitors");
+        var numTasks = this.$.numTasks;//document.getElementById("numTasks");
         var dragSrcEl = null;
 
 
@@ -178,22 +181,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           console.log("El valor en tarea es: " + contenido);
           var nuevaTarea = document.createElement("div");
 
-          //var index = document.createElement('<div class="circle" type="button"></div>')
-          //nuevaTarea.appendChild(index);
+          var index = document.createElement('div');
+          index.setAttribute("class", "circle");
+          index.innerText = id;
+          nuevaTarea.appendChild(index);
 
           var valor = document.createTextNode(contenido);
           nuevaTarea.appendChild(valor);
 
 
-          var btn = document.createElement("paper-icon-button");
-          //var icon = document.createElement("iron-icons");
-          //icon.icon = "delete";
-          //btn.appendChild(icon);
-          btn.icon = "delete";
+          /*var btn = document.createElement("paper-icon-button");
+          btn.icon = 'delete';
           btn.addEventListener('click', function() {
-            this.parentNode.remove();
+            //this.parentNode.remove();
           });
-          nuevaTarea.appendChild(btn);
+          nuevaTarea.appendChild(btn);*/
 
           // Asigno atributos
           nuevaTarea.setAttribute("id", "task" + id);
@@ -208,6 +210,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           console.log("El valor en tarea es1: " + contenido);
           return nuevaTarea;
         }
+
 
         connection.onopen = function (session, details) {
           console.log("Connected:", details);
@@ -298,8 +301,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           while (lista.firstChild) {
             lista.removeChild(lista.firstChild);
             numTasks.innerText = "0";
-            counter.innerText = "0";
-          };
+            visitors.innerText = "0";
+          }
          console.log("Connection lost: " + reason);
         }
 
