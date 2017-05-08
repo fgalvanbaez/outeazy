@@ -10,8 +10,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="shared-styles.html">
 
 
@@ -38,8 +38,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
 
     <div class="card">
+      <paper-icon-button id="delete" icon="delete"></paper-icon-button>
+      <paper-icon-button id="save" icon="save"></paper-icon-button>
+      <a>Last saved: </a><a id="lastsaved"></a>
+    </div>
 
-      <!--<input id="taskInput" class="taskInput" type="text" placeholder="Nueva tarea">-->
+
+    <div class="card">
       <paper-input id="taskInput" label="Introduzca tarea">
         <paper-icon-button icon="mail" prefix></paper-icon-button>
         <paper-icon-button icon="mail" suffix></paper-icon-button>
@@ -67,7 +72,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <!-- Script principal de Polymer -->
   <script>
     class MyView1 extends Polymer.Element {
+
       static get is() { return 'my-view1'; }
+
+      static get properties() {
+        return {
+          delete: {
+            type: Object,
+          }
+        }
+      }
 
       constructor(){
         super();
@@ -117,8 +131,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var btnNuevaTarea = this.$.btnAgregar//document.getElementById("btn-agregar");
         var visitors = this.$.visitors;//document.getElementById("visitors");
         var numTasks = this.$.numTasks;//document.getElementById("numTasks");
+        var delAll = this.$.delete;
+        var saveAll = this.$.save;
+        var lastsaved = this.$.lastsaved;
         var dragSrcEl = null;
-
 
         //Funciones para que las tareas sean DnD
         /*function handleDragStart(e) {
@@ -189,14 +205,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var valor = document.createTextNode(contenido);
           nuevaTarea.appendChild(valor);
 
-
-          /*var btn = document.createElement("paper-icon-button");
-          btn.icon = 'delete';
-          btn.addEventListener('click', function() {
-            //this.parentNode.remove();
-          });
-          nuevaTarea.appendChild(btn);*/
-
           // Asigno atributos
           nuevaTarea.setAttribute("id", "task" + id);
           nuevaTarea.setAttribute("class", "card");
@@ -204,15 +212,44 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           // Agregamos la nueva tarea a la lista
           //lista.appendChild(nuevaTarea);
 
-          //Finalmente debo actualizar ID cada vez que asigno una nueva tarea
-          id++;
-
           console.log("El valor en tarea es1: " + contenido);
           return nuevaTarea;
         }
 
+        var enviarTarea = function(session) {
+          if (tareaInput.value !== "") {
+            console.log("El valor es: " + tareaInput.value);
+
+            //alert(JSON.stringify(lista.childNodes));
+            //var lastChild = lista.childNodes[id];
+
+            //Creo la nueva tarea
+            var nodo = agregarTarea(tareaInput.value);
+
+            //Añado listeners DnD a la tarea
+            /*nodo.addEventListener('dragstart', handleDragStart, false);
+            nodo.addEventListener('dragenter', handleDragEnter, false);
+            nodo.addEventListener('dragover', handleDragOver, false);
+            nodo.addEventListener('dragleave', handleDragLeave, false);
+            nodo.addEventListener('drop', handleDrop, false);
+            nodo.addEventListener('dragend', handleDragEnd, false);*/
+
+            //inicializo el valor de la tarea de nuevo
+            tareaInput.value = "";
+
+            //Convierto un nodo en JSON
+            var myJSON = domJSON.toJSON(nodo);
+
+            //Convierto JSON object a String
+            var myStr = JSON.stringify(myJSON);
+
+           session.call("io.crossbar.app.createtask",
+           [nodo.id, myStr]).then(session.log);
+         }
+        }
 
         connection.onopen = function (session, details) {
+
           console.log("Connected:", details);
           session.log("Session open: ", session.id);
 
@@ -221,7 +258,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             function(res) {
               visitors.innerText = res
             },
-            session.log)
+            session.log);
 
           //Update visitors in new connections
           session.subscribe("io.crossbar.app.visitorupdate",
@@ -235,73 +272,139 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           session.call("io.crossbar.app.gettask").then(
            function(res){
              id = res[0];
-             numTasks.innerText = res[0];
-             //alert("NUMERO DE TAREAS" + res[0]);
+             numTasks.innerText = id;
+
              //Convierto str en JSON object
              for (var x=0; x<id; x++) {
                //Convierto str a JSON object
-               console.log("Este es mi str: " + res[1]["task"+x]);
                var myJSON = JSON.parse(res[1]["task"+x]);
-               //convierto el JSON object en un nodo del DOM
-               session.log("JSON EN CALL" + myJSON);
+               var idTask = myJSON.node.id
 
-               //JSON object a Node object
-               lista.appendChild(domJSON.toDOM(myJSON));
+               //convierto el JSON object en un nodo del DOM
+               var nodo = domJSON.toDOM(myJSON);
+
+               //Creo botón para eliminar la tarea
+               var btn = document.createElement("paper-icon-button");
+               btn.id = "del" + idTask;
+               btn.icon = 'delete';
+               btn.addEventListener('click', function() {
+                 alert("Eliminando tarea "+ idTask);
+               });
+               nodo.appendChild(btn);
+
+               //Añado el nodo a la lista del DOM
+               lista.appendChild(nodo);
              }
-           }, session.log, session.log);
+           }, session.log
+         );
 
           //Suscribo al cliente a la funcion onupdatetext(actualiza las lista)
-          session.subscribe("io.crossbar.app.onupdatetask",
+          session.subscribe("io.crossbar.app.oncreatetask",
             function(args) {
               numTasks.innerText = args[0][0];
-              var tasks = JSON.parse(args[0][1]);
-              lista.appendChild(domJSON.toDOM(tasks));
-              id = lista.childElementCount;
-            }).then(session.log, session.log);
 
-           console.log("listener");
-           btnNuevaTarea.addEventListener("click",
-           function(evt) {
+              //Convierto el string en un JSON
+              var myJSON = JSON.parse(args[0][1]);
+              var idTask = myJSON.node.id;
+              //Convierto el JSON en un nodo del DOM
+              var nodo = domJSON.toDOM(myJSON);
 
-             if (tareaInput.value !== "") {
-               console.log("El valor es: " + tareaInput.value);
+              //Creo el elemento para eliminar la tarea
+              var btn = document.createElement("paper-icon-button");
+              btn.id = "del" + idTask;
+              btn.icon = 'delete';
+              btn.addEventListener('click', function() {
+                alert("Eliminando tarea "+ idTask);
+              });
+              nodo.appendChild(btn);
+              lista.appendChild(nodo);
+              id++;
+            }).then(session.log);
 
-               //alert(JSON.stringify(lista.childNodes));
-               //var lastChild = lista.childNodes[id];
-
-               //Creo la nueva tarea
-               var nodo = agregarTarea(tareaInput.value)
-
-               //Añado listeners DnD a la tarea
-               /*nodo.addEventListener('dragstart', handleDragStart, false);
-               nodo.addEventListener('dragenter', handleDragEnter, false);
-               nodo.addEventListener('dragover', handleDragOver, false);
-               nodo.addEventListener('dragleave', handleDragLeave, false);
-               nodo.addEventListener('drop', handleDrop, false);
-               nodo.addEventListener('dragend', handleDragEnd, false);*/
-
-               //inicializo el valor de la tarea de nuevo
-               tareaInput.value = "";
-
-               var myJSON = domJSON.toJSON(nodo);
-
-               //Convierto JSON object a String
-               myJSON = JSON.stringify(myJSON);
-
-               console.log("JSON EN UPDATETASK" + myJSON);
-
-                session.call("io.crossbar.app.updatetask",
-                [nodo.id, myJSON]).then(session.log, session.log);
+          session.subscribe("io.crossbar.app.updateall",
+            function(args) {
+              //Eliminar todas la tareas
+              id = args[0][0];
+              if (id == 0) {
+                numTasks.innerText = id;
+                tareaInput.value = "";
+                while (lista.firstChild) {
+                  lista.removeChild(lista.firstChild);
+                }
               }
+              //Si solo se elimino una tarea, se actualiza la lista
+              else if (id > 0) {
+                numTasks.innerText = id;
 
-            });
+                //Convierto str en JSON object
+                for (var x=0; x<id; x++) {
+                  //Convierto str a JSON object
+                  var myJSON = JSON.parse(args[0][1]["task"+x]);
+                  var idTask = myJSON.node.id
+
+                  //convierto el JSON object en un nodo del DOM
+                  var nodo = domJSON.toDOM(myJSON);
+
+                  //Creo botón para eliminar la tarea
+                  var btn = document.createElement("paper-icon-button");
+                  btn.id = "del" + idTask;
+                  btn.icon = 'delete';
+                  btn.addEventListener('click', function() {
+                    alert("Eliminando tarea "+ idTask);
+                  });
+                  nodo.appendChild(btn);
+
+                  //Añado el nodo a la lista del DOM
+                  lista.appendChild(nodo);
+                }
+              }
+            }).then(session.log);
+
+            session.subscribe("io.crossbar.app.updatesavetime",
+              function(args) {
+                var d = new Date();
+                var date = d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()+" "+d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
+                lastsaved.innerText = date;
+              }).then(session.log);
+
+          //LISTENERS
+          //Listener para agregar tarea en todas las sesiones
+          btnNuevaTarea.addEventListener("click",
+          function(evt) {
+            enviarTarea(session);
+          });
+
+          //Listener para agregar tarea en todas las sesiones (ENTER)
+          tareaInput.addEventListener("keypress",
+          function(evt) {
+            var key = evt.which || evt.keyCode;
+            if (key === 13) {
+              enviarTarea(session);
+            }
+          });
+
+          //Listener para eliminar toda la lista de tareas
+          delAll.addEventListener("click", function(evt) {
+            if (id > 0) {
+              alert("Voy a eliminar todo");
+              session.call("io.crossbar.app.delall").then(session.log);
+            }
+          });
+
+          //Listener para guardar toda la lista de tareas
+          saveAll.addEventListener("click", function(evt) {
+            if (id > 0) {
+              alert("Voy a guardar todo");
+              session.call("io.crossbar.app.saveall").then(session.log);
+            }
+          });
         }
 
         connection.onclose = function (reason, details) {
+          numTasks.innerText = "0";
+          visitors.innerText = "0";
           while (lista.firstChild) {
             lista.removeChild(lista.firstChild);
-            numTasks.innerText = "0";
-            visitors.innerText = "0";
           }
          console.log("Connection lost: " + reason);
         }

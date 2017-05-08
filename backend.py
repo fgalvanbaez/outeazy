@@ -55,14 +55,44 @@ class appBackend(ApplicationSession):
         return [len(self._task),self._task]
 
 
-    @wamp.register(u"io.crossbar.app.updatetask")
+    @wamp.register(u"io.crossbar.app.createtask")
     def submittask(self, JSONobjectID, JSONobject):
 
         #Añadir el elemento la variable de python
         self._task[JSONobjectID] = JSONobject
 
         #Publico el JSON sin tratamiento hacia las demás instancias
-        self.publish('io.crossbar.app.onupdatetask', [len(self._task), JSONobject])
+        self.publish('io.crossbar.app.oncreatetask', [len(self._task), JSONobject])
+        return self._task
+
+
+    @wamp.register(u"io.crossbar.app.delall")
+    def delall(self):
+        self._task = {}
+        self.publish('io.crossbar.app.updateall', [len(self._task), self._task])
+        return self._task
+
+
+    @wamp.register(u"io.crossbar.app.saveall")
+    def saveall(self):
+        #Conexión a base de datos para salvar el dict _task
+        self.publish('io.crossbar.app.updatesavetime')
+        return self._task
+
+
+    @wamp.register(u"io.crossbar.app.deltask")
+    def deltask(self, id):
+
+        ##Eliminar tareas desde la indicada
+        """
+        Eliminar tareaX
+        desde tareaX hasta final de tareas
+            tareaX = tareaX+1
+        del tareaX+1
+
+        """
+
+        self.publish('io.crossbar.app.updateall', [len(self._task), self._task])
         return self._task
 
 
