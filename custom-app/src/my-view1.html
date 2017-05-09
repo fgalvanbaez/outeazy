@@ -284,11 +284,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                var nodo = domJSON.toDOM(myJSON);
 
                //Creo botón para eliminar la tarea
-               var btn = document.createElement("paper-icon-button");
+               var btn = document.createElement("input");
                btn.id = "del" + idTask;
-               btn.icon = 'delete';
-               btn.addEventListener('click', function() {
+               //btn.icon = 'delete';
+               btn.type = "button";
+               btn.value = "Eliminar";
+               btn.addEventListener('click', function(evt) {
                  alert("Eliminando tarea "+ idTask);
+                 session.call("io.crossbar.app.deltask", [idTask])
+                 alert(evt.target.id)
                });
                nodo.appendChild(btn);
 
@@ -310,11 +314,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               var nodo = domJSON.toDOM(myJSON);
 
               //Creo el elemento para eliminar la tarea
-              var btn = document.createElement("paper-icon-button");
+              var btn = document.createElement("input");
               btn.id = "del" + idTask;
-              btn.icon = 'delete';
-              btn.addEventListener('click', function() {
+              //btn.icon = 'delete';
+              btn.type = "button";
+              btn.value = "Eliminar";
+              btn.addEventListener('click', function(evt) {
                 alert("Eliminando tarea "+ idTask);
+                alert(evt.target.id)
+                session.call("io.crossbar.app.deltask", [idTask])
               });
               nodo.appendChild(btn);
               lista.appendChild(nodo);
@@ -325,33 +333,38 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             function(args) {
               //Eliminar todas la tareas
               id = args[0][0];
-              if (id == 0) {
-                numTasks.innerText = id;
-                tareaInput.value = "";
-                while (lista.firstChild) {
-                  lista.removeChild(lista.firstChild);
-                }
+              numTasks.innerText = id;
+              tareaInput.value = "";
+              while (lista.firstChild) {
+                lista.removeChild(lista.firstChild);
               }
+
               //Si solo se elimino una tarea, se actualiza la lista
-              else if (id > 0) {
-                numTasks.innerText = id;
+              if (id > 0) {
 
                 //Convierto str en JSON object
                 for (var x=0; x<id; x++) {
                   //Convierto str a JSON object
                   var myJSON = JSON.parse(args[0][1]["task"+x]);
+                  //alert(args[0][1]["task"+x])
                   var idTask = myJSON.node.id
 
                   //convierto el JSON object en un nodo del DOM
                   var nodo = domJSON.toDOM(myJSON);
 
                   //Creo botón para eliminar la tarea
-                  var btn = document.createElement("paper-icon-button");
+                  var btn = document.createElement("input");
                   btn.id = "del" + idTask;
-                  btn.icon = 'delete';
-                  btn.addEventListener('click', function() {
+                  //btn.icon = 'delete';
+                  btn.value = "Eliminar";
+                  btn.type = "button";
+                  btn.addEventListener('click', function(evt) {
                     alert("Eliminando tarea "+ idTask);
+                    alert(evt.target.id)
+                    session.call("io.crossbar.app.deltask", [idTask])
                   });
+
+                  //Añado el botón al nodo
                   nodo.appendChild(btn);
 
                   //Añado el nodo a la lista del DOM

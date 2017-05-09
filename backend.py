@@ -32,6 +32,7 @@ from autobahn.twisted.wamp import ApplicationSession
 #from autobahn.asincio.wamp import ApplicationSession
 from twisted.internet import reactor
 
+import re
 import json
 
 class appBackend(ApplicationSession):
@@ -83,14 +84,43 @@ class appBackend(ApplicationSession):
     @wamp.register(u"io.crossbar.app.deltask")
     def deltask(self, id):
 
-        ##Eliminar tareas desde la indicada
         """
         Eliminar tareaX
         desde tareaX hasta final de tareas
             tareaX = tareaX+1
-        del tareaX+1
+        del tareaX
 
         """
+
+        ##Eliminar tareas desde la indicada
+        x = int(re.search(r'\d+', id).group())
+        if ((len(self._task)-1) > x):
+            while (x < (len(self._task)-1)):
+
+                #convierto en json para cambiar el taskID
+                myJSON = json.loads(self._task["task"+str(x+1)])
+
+                #modifico el id al correcto y varios atributos
+                myJSON['node']['id'] = "task"+str(x)
+                myJSON['node']['attributes']['id'] = "task"+str(x)
+                myJSON['node']['childNodes'][0]['childNodes'][0]['data'] = str(x)
+                myJSON['node']['childNodes'][0]['childNodes'][0]['nodeValue'] = str(x)
+
+                #vuelvo a convertir en str
+                self._task["task"+str(x)] = json.dumps(myJSON)
+
+                """#busco la subcadena taskID y lo reemplazo por el correcto
+                mySTR = self._task["task"+str(x+1)].replace(("task"+str(x+1)), ("task"+str(x)))
+
+                #Actualizo el valor en el correcto
+                self._task["task"+str(x)] = mySTR"""
+
+                #Aumento contador
+                x += 1
+
+            del self._task["task"+str(x)]
+        else:
+            del self._task[id]
 
         self.publish('io.crossbar.app.updateall', [len(self._task), self._task])
         return self._task
