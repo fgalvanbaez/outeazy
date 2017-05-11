@@ -284,16 +284,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                var nodo = domJSON.toDOM(myJSON);
 
                //Creo botón para eliminar la tarea
-               var btn = document.createElement("input");
+               var btn = document.createElement("paper-icon-button");
                btn.id = "del" + idTask;
-               //btn.icon = 'delete';
-               btn.type = "button";
-               btn.value = "Eliminar";
+               btn.icon = 'delete';
+               //btn.type = "button";
+               //btn.value = "Eliminar";
                btn.addEventListener('click', function(evt) {
-                 alert("Eliminando tarea "+ idTask);
-                 session.call("io.crossbar.app.deltask", [idTask])
                  alert(evt.target.id)
+                 var correctID = evt.target.id.replace("del", "");
+                 alert("Eliminando tarea "+ correctID);
+                 session.call("io.crossbar.app.deltask", [correctID])
                });
+
+               //Añado el boton al nodo
                nodo.appendChild(btn);
 
                //Añado el nodo a la lista del DOM
@@ -314,18 +317,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               var nodo = domJSON.toDOM(myJSON);
 
               //Creo el elemento para eliminar la tarea
-              var btn = document.createElement("input");
+              var btn = document.createElement("paper-icon-button");
               btn.id = "del" + idTask;
-              //btn.icon = 'delete';
-              btn.type = "button";
-              btn.value = "Eliminar";
+              btn.icon = 'delete';
+              //btn.type = "button";
+              //btn.value = "Eliminar";
               btn.addEventListener('click', function(evt) {
                 alert("Eliminando tarea "+ idTask);
                 alert(evt.target.id)
                 session.call("io.crossbar.app.deltask", [idTask])
               });
+
+              //Añado el botón al nodo
               nodo.appendChild(btn);
+
+              //Añado el nodo al DOM
               lista.appendChild(nodo);
+
+              //Aumento el contador de tareas
               id++;
             }).then(session.log);
 
@@ -353,21 +362,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                   var nodo = domJSON.toDOM(myJSON);
 
                   //Creo botón para eliminar la tarea
-                  var btn = document.createElement("input");
+                  var btn = document.createElement("paper-icon-button");
                   btn.id = "del" + idTask;
-                  //btn.icon = 'delete';
-                  btn.value = "Eliminar";
-                  btn.type = "button";
+                  btn.icon = 'delete';
+                  //btn.value = "Eliminar";
+                  //btn.type = "button";
                   btn.addEventListener('click', function(evt) {
-                    alert("Eliminando tarea "+ idTask);
                     alert(evt.target.id)
-                    session.call("io.crossbar.app.deltask", [idTask])
+                    var correctID = evt.target.id.replace("del", "");
+                    alert("Eliminando tarea "+ correctID);
+                    session.call("io.crossbar.app.deltask", [correctID])
                   });
 
                   //Añado el botón al nodo
                   nodo.appendChild(btn);
 
-                  //Añado el nodo a la lista del DOM
+                  //Añado el nodo al DOM
                   lista.appendChild(nodo);
                 }
               }
