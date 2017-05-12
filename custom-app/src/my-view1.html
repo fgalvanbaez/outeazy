@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
 <link rel="import" href="shared-styles.html">
 
 
@@ -49,10 +50,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <paper-icon-button icon="mail" prefix></paper-icon-button>
         <paper-icon-button icon="mail" suffix></paper-icon-button>
       </paper-input>
-      <input id="btnAgregar" class="btnAgregar" value="Agregar tarea" type="button">
-      <div id="numTasks" class="numTasks circle"></div>
-      <div id="visitors" class="numTasks circle"></div>
-
+      <paper-icon-button id="btnAgregar" icon="polymer" class="btnAgregar" value="Agregar tarea" type="button">
+      <div id="numTasks" class="circle"></div>
+      <div id="visitors" class="circle"></div>
     </div>
 
     <div id="taskList" class="taskList"></div>
@@ -115,17 +115,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
            ],
            realm: "public",
         });*/
-        var connection = new autobahn.Connection({
+        /*var connection = new autobahn.Connection({
            url: "ws://localhost:8080/ws",
            realm: "public"
-        });
+        });*/
 
         // Variables
         /*Polymer builds a static map of node IDs when the element initializes
         its DOM template, to provide convenient access to frequently used nodes
         without the need to query for them manually. Any node specified in the
         element's template with an id is stored on the this.$ hash by id.*/
-        var id = 0;
+        /*var id = 0;
         var lista = this.$.taskList;//document.getElementById("task-list");
         var tareaInput = this.$.taskInput;//document.getElementById("task-input");
         var btnNuevaTarea = this.$.btnAgregar//document.getElementById("btn-agregar");
@@ -192,7 +192,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 
         // Función para agregar tarea al DOM
-        var agregarTarea = function(contenido) {
+        /*var agregarTarea = function(contenido) {
 
           console.log("El valor en tarea es: " + contenido);
           var nuevaTarea = document.createElement("div");
@@ -217,7 +217,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
 
         var enviarTarea = function(session) {
-          if (tareaInput.value !== "") {
+          if ((tareaInput.value !== "") && (tareaInput.value !== undefined)) {
             console.log("El valor es: " + tareaInput.value);
 
             //alert(JSON.stringify(lista.childNodes));
@@ -235,7 +235,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             nodo.addEventListener('dragend', handleDragEnd, false);*/
 
             //inicializo el valor de la tarea de nuevo
-            tareaInput.value = "";
+            /*tareaInput.value = "";
 
             //Convierto un nodo en JSON
             var myJSON = domJSON.toJSON(nodo);
@@ -432,7 +432,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
          console.log("Connection lost: " + reason);
         }
 
-        connection.open();
+        connection.open();*/
       }
 
       disconnectedCallback(){

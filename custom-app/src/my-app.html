@@ -22,7 +22,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="my-icons.html">
+
+
+<!--Añado mi elemnto de crossbar-->
+<link rel="import" href="crossbar-element.html">
 
 <dom-module id="my-app">
   <template>
@@ -75,21 +80,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <app-drawer-layout fullbleed>
       <!-- Drawer content -->
-      <app-drawer id="drawer" swipe-open slot="drawer">
+      <!--<app-drawer id="drawer" swipe-open slot="drawer">
         <app-toolbar>Menu</app-toolbar>
         <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
           <a name="view1" href="/">View One</a>
-          <!--<a name="view2" href="/view2">View Two</a>
-          <a name="view3" href="/view3">View Three</a>-->
+          <a name="view2" href="/view2">View Two</a>
+          <a name="view3" href="/view3">View Three</a>
         </iron-selector>
-      </app-drawer>
+      </app-drawer>-->
 
       <!-- Main content -->
       <app-header-layout has-scrolling-region>
         <app-header slot="header" condenses reveals effects="waterfall">
           <app-toolbar>
+            <iron-icon icon="icons:face"></iron-icon>
+            <span id="here">0</span>
             <paper-icon-button icon="menu" onclick="drawer.toggle()"></paper-icon-button>
             <div main-title>My App</div>
+            <div id="visitors" class=circle>
+
+            </div>
           </app-toolbar>
         </app-header>
 
@@ -105,6 +115,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </iron-pages>
       </app-header-layout>
     </app-drawer-layout>
+    <crossbar-element
+      id="crossbar"
+      session="{{session}}"
+      close="{{close}}"
+      message="{{message}}">
+    </crossbar-element>
+
   </template>
 
   <script>
@@ -115,16 +132,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       static get properties() {
         return {
-          page: {
+          /*page: {
             type: String,
             reflectToAttribute: true,
             observer: '_pageChanged',
-          },
-
-          /*delete: {
-            type: Object,
-            //value: function() {return this.$.delete;},
           },*/
+          session: {
+            type: Object,
+            observer: '_sessionChanged',
+          },
+          close: {
+            type: String,
+            observer: '_closeChanged',
+          },
+          message: {
+            type: Object,
+            notify: true,
+          },
         };
       }
 
@@ -138,7 +162,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         super();
         console.log(this.localName + '#' + 'constructor');
         //this.delete = this.$.delete;
-
       }
 
       ready() {
@@ -149,6 +172,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       connectedCallback() {
         super.connectedCallback();
         console.log(this.localName + '#' + 'connectedCallback');
+
+        /*this.session.call = this._onCall.bind(this);
+        this.session.subscribe = this._onSubscribe.bind(this);*/
+
       }
 
       disconnectedCallback() {
@@ -156,6 +183,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         console.log(this.localName + '#' + 'disconnectedCallback');
       }
 
+      //observers
+
+      _onCall() {
+
+      }
+
+      _onSubscribe() {
+
+      }
+
+      _sessionChanged() {
+        this.$.here.innerText = this.session.id;
+      }
+
+      _closeChanged() {
+        this.$.here.innerText = this.close;
+      }
 
       _routePageChanged(page) {
         // Polymer 2.0 will call with `undefined` on initialization.

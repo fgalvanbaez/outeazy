@@ -1,0 +1,162 @@
+<!--
+Property of Francisco A. Galván Báez
+-->
+
+<!--añado polymer-->
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<!-- Script para añadir autobahnhjs -->
+<script src="../bower_components/autobahnjs/autobahn.min.js"></script>
+
+<!-- JS para evitar los errores de valores cíclicos -->
+<script src="../bower_components/domjson/dist/domJSON.min.js"></script>
+
+<!-- Pongo autobahn en modo debug -->
+<script>AUTOBAHN_DEBUG = true;</script>
+
+
+<dom-module id="crossbar-element">
+  <template>
+    <style>
+    </style>
+  </template>
+
+  <script>
+
+    class CrossbarElement extends Polymer.Element {
+
+      static get is() { return 'crossbar-element'; }
+
+      static get properties() {
+        return {
+
+          url: {
+            type: String,
+            notify: true,
+            value: "ws://localhost:8080/ws",
+            readOnly: true,
+          },
+
+          connection: {
+            type: Object,
+          },
+
+          session: {
+            type: Object,
+            notify: true,
+            readOnly: true,
+          },
+
+          message: {
+            type: Object,
+            notify: true,
+          },
+
+          close: {
+            type: String,
+            notify: true,
+            readOnly: true,
+          },
+
+          page: {
+            type: String,
+            reflectToAttribute: true,
+            observer: '_pageChanged',
+          },
+        };
+      }
+
+      /*static get observers() {
+        return [
+          '_routePageChanged(routeData.page)',
+        ];
+      }*/
+
+      constructor() {
+        super();
+        console.log(this.localName + '#' + 'constructor');
+      }
+
+      ready() {
+        super.ready();
+        console.log(this.localName + '#' + 'ready');
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        console.log(this.localName + '#' + 'connectedCallback');
+
+        //Conexion del websocket
+        this.connection = new autobahn.Connection({
+           url: this.url,
+           realm: "public"
+        });
+        this.connection.onopen = this._onOpen.bind(this);
+        this.connection.onclose = this._onClose.bind(this);
+        this.connection.open();
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        console.log(this.localName + '#' + 'disconnectedCallback');
+      }
+
+      _onOpen(session, details) {
+        this.session = session;
+        console.log("Connected:", details);
+        session.log("Session open: ", session.id);
+      }
+
+      _onClose(reason) {
+        this.close = reason;
+        console.log("Connection lost: " + reason);
+      }
+
+
+      //OBSERVERS
+      _connectionChanged() {
+        this.connection.onopen = function(session, details) {
+          this.session = [session, details];
+        }
+      }
+
+
+      _onopenChanged() {
+
+      }
+
+      _routePageChanged(page) {
+        // Polymer 2.0 will call with `undefined` on initialization.
+        // Ignore until we are properly called with a string.
+        if (page === undefined) {
+          return;
+        }
+
+        // If no page was found in the route data, page will be an empty string.
+        // Deault to 'view1' in that case.
+        this.page = page || 'view1';
+
+        // Close a non-persistent drawer when the page & route are changed.
+        /*if (!this.$.drawer.persistent) {
+          this.$.drawer.close();
+        }*/
+      }
+
+      _pageChanged(page) {
+        // Load page import on demand. Show 404 page if fails
+        var resolvedPageUrl = this.resolveUrl('my-' + page + '.html');
+        Polymer.importHref(
+            resolvedPageUrl,
+            null,
+            this._showPage404.bind(this),
+            true);
+      }
+
+      _showPage404() {
+        this.page = 'view404';
+      }
+    }
+
+    window.customElements.define(CrossbarElement.is, CrossbarElement);
+  </script>
+</dom-module>
