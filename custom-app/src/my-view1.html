@@ -38,36 +38,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     </style>
 
-    <div class="card">
+    <!--<div class="card">
       <paper-icon-button id="delete" icon="delete"></paper-icon-button>
       <paper-icon-button id="save" icon="save"></paper-icon-button>
       <a>Last saved: </a><a id="lastsaved"></a>
-    </div>
+    </div>-->
 
 
-    <div class="card">
+    <!--<div class="card">
       <paper-input id="taskInput" label="Introduzca tarea">
-        <!--<paper-icon-button icon="mail" prefix></paper-icon-button>
+        <paper-icon-button icon="mail" prefix></paper-icon-button>
         <paper-icon-button icon="mail" suffix></paper-icon-button>-->
-      </paper-input>
+      <!--</paper-input>
       <paper-icon-button id="btnAgregar" icon="polymer" class="btnAgregar" value="Agregar tarea" type="button">
       <div id="numTasks" class="circle"></div>
       <div id="visitors" class="circle"></div>
-    </div>
+    </div>-->
 
-    <div id="taskList" class="taskList"></div>
+    <div id="tasks" class=""></div>
 
   </template>
-
-  /*CREACION DEL WEBSOCKET*/
-  <!-- Pongo autobahn en modo debug
-  <script>AUTOBAHN_DEBUG = true;</script>
-
-  <!-- Script para añadir autobahnhjs
-  <script src="../bower_components/autobahnjs/autobahn.min.js"></script>
-
-  <!-- JS para evitar los errores de valores cíclicos
-  <script src="../bower_components/domjson/dist/domJSON.min.js"></script>
 
   <!-- Script principal de Polymer -->
   <script>
@@ -445,8 +435,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       _taskListChanged() {
-        alert("Me llego algo");
-        if (len(this.taskList) === 0) {
+        //alert("Me llego algo");
+        /*if (len(this.taskList) === 0) {
           while (lista.firstChild) {
             lista.removeChild(lista.firstChild);
           }
@@ -482,7 +472,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             lista.appendChild(nodo);
           }
 
-        }
+        }*/
       }
 
     }

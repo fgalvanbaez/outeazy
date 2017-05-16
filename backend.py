@@ -53,7 +53,7 @@ class appBackend(ApplicationSession):
     #TASK
     @wamp.register(u'io.crossbar.app.gettask')
     def gettask(self):
-        return [len(self._task),self._task]
+        return [[len(self._task),self._task]]
 
 
     @wamp.register(u"io.crossbar.app.createtask")
@@ -61,24 +61,26 @@ class appBackend(ApplicationSession):
 
         #Añadir el elemento la variable de python
         self._task[JSONobjectID] = JSONobject
+        item = {}
+        item[JSONobjectID] = JSONobject
 
         #Publico el JSON sin tratamiento hacia las demás instancias
-        self.publish('io.crossbar.app.oncreatetask', [len(self._task), JSONobject])
-        return self._task
+        self.publish('io.crossbar.app.oncreatetask', [len(self._task), item])
+        #return self._task
 
 
     @wamp.register(u"io.crossbar.app.delall")
     def delall(self):
         self._task = {}
         self.publish('io.crossbar.app.updateall', [len(self._task), self._task])
-        return self._task
+        #return self._task
 
 
     @wamp.register(u"io.crossbar.app.saveall")
     def saveall(self):
         #Conexión a base de datos para salvar el dict _task
         self.publish('io.crossbar.app.updatesavetime')
-        return self._task
+        #return self._task
 
 
     @wamp.register(u"io.crossbar.app.deltask")
@@ -123,7 +125,7 @@ class appBackend(ApplicationSession):
             del self._task[id]
 
         self.publish('io.crossbar.app.updateall', [len(self._task), self._task])
-        return self._task
+        #return self._task
 
 
     @inlineCallbacks
@@ -131,7 +133,7 @@ class appBackend(ApplicationSession):
 
         def onconnect(msg):
             self._visitors += 1
-            self.publish('io.crossbar.app.visitorupdate', [self._visitors])
+            self.publish('io.crossbar.app.visitorupdate', self._visitors)
             return self._visitors
 
         conn = yield self.subscribe(onconnect, "wamp.session.on_join")
@@ -141,7 +143,7 @@ class appBackend(ApplicationSession):
             self._visitors -= 1
             if self._visitors < 0:
                 self._visitors = 0;
-            self.publish('io.crossbar.app.visitorupdate', [self._visitors])
+            self.publish('io.crossbar.app.visitorupdate', self._visitors)
             return self._visitors
 
         disconn = yield self.subscribe(ondisconnect, "wamp.session.on_leave")

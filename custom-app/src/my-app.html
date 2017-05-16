@@ -26,8 +26,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-fab/paper-fab.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-badge/paper-badge.html">
 
 <link rel="import" href="my-icons.html">
+
+
+<!-- Importo mi otro custom element -->
+<link rel="import" href="my-view1.html">
 
 
 <!--Añado mi elemnto de crossbar-->
@@ -97,26 +102,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </app-drawer>
         <app-header slot="header" fixed effects="waterfall">
           <app-toolbar>
-            <paper-icon-button icon="menu" onclick="drawer.toggle()"></paper-icon-button>
+            <paper-icon-button icon="menu" on-tap="drawer.toggle()"></paper-icon-button>
             <div main-title>My App</div>
-            <iron-icon icon="icons:arrow-forward"></iron-icon>
-            <span id="ntasks"></span>
+            <div>
+              <span>Tareas</span>
+              <paper-badge id="ntasks" label="0"></paper-badge>
+            </div>
             &nbsp;
-            <iron-icon icon="icons:account-circle"></iron-icon>
-            <span id="here"></span>
             &nbsp;
-            <iron-icon icon="icons:face"></iron-icon>
-            <span id="visitors" class=circle></span>
+            <div>
+              <iron-icon icon="icons:face"></iron-icon>
+              <paper-badge id="visitors" label="0"></paper-badge>
+            </div>
+            &nbsp;
             &nbsp;
             <paper-icon-button
               id="saveall"
-              icon="icons:save">
+              icon="icons:save"
+              on-tap="_saveAll"
+              disabled>
             </paper-icon-button>
-            &nbsp;
             <paper-icon-button
               id="delall"
-              icon="icons:delete">
+              icon="icons:delete"
+              on-tap="_deleteAll"
+              disabled>
             </paper-icon-button>
+            &nbsp;
+            <!--<iron-icon icon="icons:account-circle"></iron-icon>
+            <span id="here"></span>-->
           </app-toolbar>
         </app-header>
         <!--<iron-pages
@@ -127,7 +141,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           <div class="card">
             <paper-input id="tTask" label="Introduzca tarea"></paper-input>
-            <paper-fab icon="icons:add" on-tap="postTask"></paper-fab>
+            <paper-fab icon="icons:add" on-tap="_postTask"></paper-fab>
           </div>
           <my-view1
             name="view1"
@@ -150,52 +164,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       error="{{lastError}}">
     </crossbar-connection>
 
-
-    <div id="calling">
-      <!-- Obtengo los visitantes actualmente unidos -->
-      <crossbar-call
-        id="getvisitors"
-        session="{{session}}"
-        method="io.crossbar.app.getvisitors"
-        last-request="{{lastRequest}}"
-        last-response='{{lastResponse}}'
-        last-error='{{lastError}}'
-        auto>
-      </crossbar-call>
-
-      <!-- Obtengo las tareas actuales -->
-      <crossbar-call
-        id="gettask"
-        session="{{session}}"
-        method="io.crossbar.app.gettask"
-        last-request="{{lastRequest}}"
-        last-response='{{lastResponse}}'
-        last-error='{{lastError}}'
-        auto>
-      </crossbar-call>
-    </div>
-
-    <div id="subscribing">
-
-      <!-- Me subscribo al metodo que actualiza los visitantes de la app-->
-      <crossbar-subscribe
-        id="visitorupdate"
-        session="{{session}}"
-        topic="io.crossbar.app.visitorupdate"
-        last-event="{{lastResponse}}"
-        subscription-error="{{lastError}}">
-      </crossbar-subscribe>
-
-      <crossbar-subscribe
-        id="oncreatetask"
-        session="{{session}}"
-        topic="io.crossbar.app.oncreatetask"
-        last-event="{{lastResponse}}"
-        subscription-error="{{lastError}}">
-      </crossbar-subscribe>
-
-    </div>
-
   </template>
 
   <script>
@@ -215,14 +183,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             type: Object,
             observer: '_sessionChanged',
           },
-          lastRequest: {
+          /*lastRequest: {
             type: Object,
             observer: '_requestChanged',
           },
           lastResponse: {
             type: Object,
             observer: '_responseChanged',
-          },
+          },*/
           lastError: {
             type: Object,
             observer: '_errorChanged',
@@ -230,6 +198,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           taskList: {
             type: Object,
             notify: true,
+            readOnly: true,
+          },
+          idTask: {
+            type: Number,
+            value: 0,
+            readOnly: true,
           },
         };
       }
@@ -254,17 +228,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       connectedCallback() {
         super.connectedCallback();
         console.log(this.localName + '#' + 'connectedCallback');
-
-        this.$.delall.addEventListener('tap', function(evt) {
-          alert("Voy a eliminar todo");
-          //session.call("io.crossbar.app.delall").then(session.log);
-          /*crear un crossbar call*/
-        });
-
-        this.$.saveall.addEventListener("tap", function(evt) {
-          alert("Voy a guardar todo");
-          //session.call("io.crossbar.app.saveall").then(session.log);
-        });
       }
 
       disconnectedCallback() {
@@ -272,65 +235,148 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         console.log(this.localName + '#' + 'disconnectedCallback');
       }
 
-      postTask() {
+      _postTask() {
         if (this.$.tTask.value) {
           alert(this.$.tTask.value);
+
+          console.log(this.$.tTask.value);
+          var nuevaTarea = document.createElement("div");
+
+          var index = document.createElement('div');
+          index.setAttribute('class', 'circle');
+          index.innerText = 0;
+          nuevaTarea.appendChild(index);
+
+          var valor = document.createTextNode(this.$.tTask.value);
+          nuevaTarea.appendChild(valor);
+
+          // Asigno atributos
+          nuevaTarea.setAttribute("id", "task"+this.idTask);
+          nuevaTarea.setAttribute("class", "card");
+          nuevaTarea.setAttribute("draggable", "true");
+
+          //Convierto un nodo en JSON
+          var myJSON = domJSON.toJSON(nuevaTarea);
+
+          //Convierto JSON object a String
+          var myStr = JSON.stringify(myJSON);
+
+          /*Genera una tarea un la envia al backend, el backend se encarga
+          de hacer un publish con la nueva tarea incluida esta misma sesion*/
+          this.session.call("io.crossbar.app.createtask", [nuevaTarea.id, myStr])
+            .then(this.session.log);
+            /*.then(this._handleTask.bind(this), this.session.log)
+            .catch(this._handleError.bind(this));*/
+
+          this.$.tTask.value = "";
+
         } else {
           alert("el input es undefined");
         }
       }
 
-      //observers
-      _responseChanged() {
-        console.log(this.lastResponse['method']);
-        switch (this.lastResponse['method']) {
-          case "io.crossbar.app.getvisitors":
-            //alert("metodo: "+ this.lastRequest['method']);
-            console.log("Numero de users: "+this.lastResponse['response']);
-            this.$.visitors.innerText = this.lastResponse['response'];
-            break;
-
-          case "io.crossbar.app.gettask":
-            //alert("método: "+ this.lastRequest['method']);
-            console.log("Numero de tareas: "+this.lastResponse['response'][0]);
-            this.$.ntasks.innerText = this.lastResponse['response'][0];
-            alert(this.lastResponse['response'][1]);
-            this.taskList = this.lastResponse['response'][1];
-            break;
-
-          case "io.crossbar.app.visitorupdate":
-            console.log("actualizando visitantes: "+this.lastResponse['response'].args[0]);
-            this.$.visitors.innerText = this.lastResponse['response'].args[0];
-            break;
-
-          case "io.crossbar.app.oncreatetask":
-            this.$.ntasks.innerText = this.lastResponse['response'][0][0];
-            this.taskList = this.lastResponse['response'][0][1];
-            break;
+      _saveAll() {
+        if (this.idTask > 0) {
+          this.session.call("io.crossbar.app.saveall")
+            .then(this.session.log);
+            /*.then(this._handleTask.bind(this), this.session.log)
+            .catch(this._handleError.bind(this));*/
         }
       }
 
-      _requestChanged() {
+      _deleteAll() {
+        if (this.idTask > 0) {
+
+          this.session.call("io.crossbar.app.delall")
+            .then(this.session.log);
+            /*.then(this._handleTask.bind(this), this.session.log)
+            .catch(this._handleError.bind(this));*/
+        }
+      }
+
+      _handleSave() {
+        var d = new Date();
+        var date = d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()+" "+d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
+        //lastsaved.innerText = date;
+        alert("Guardado a las: "+date);
+        this.$.saveall.disabled = true;
+      }
+
+      /*Función que maneja las respuesta tanto de call, como de subscribe
+      para */
+      _handleTask(response) {
+
+        if (response[0][0] === 0) {
+          this.$.delall.disabled = true;
+          this.$.saveall.disabled = true;
+        } else {
+          this.$.delall.disabled = false;
+          this.$.saveall.disabled = false;
+        }
+        console.log("Tareas: "+response[0][0]);
+        this._setIdTask(response[0][0]);
+        this.$.ntasks.label = response[0][0];
+        this._setTaskList(response[0][1]);
+      }
+
+      _handleVisitor(response) {
+        console.log("Sesiones: "+response);
+        this.$.visitors.label = response;
+      }
+
+
+      _handleError(error) {
+        alert("Hubo un error en: "+ error);
+      }
+
+      //observers
+      _sessionChanged() {
+
+        this.session.log("Session open my-app: "+ this.session.id);
+        //this.$.here.innerText = this.session.id;
+
+        //Actualizo el numero de sesiones abiertas actuales
+        this.session.call("io.crossbar.app.getvisitors")
+          .then(this._handleVisitor.bind(this), this.session.log)
+          .catch(this._handleError.bind(this), this.session.log);
+
+        //Me subscribo al metodo para actualizar las sesiones
+        this.session.subscribe(
+          "io.crossbar.app.visitorupdate",
+          this._handleVisitor.bind(this))
+          .then(this.session.log)
+          .catch(this._handleError.bind(this));
+
+        //Actualizo el número de tareas
+        this.session.call("io.crossbar.app.gettask").
+          then(this._handleTask.bind(this), this.session.log).
+          catch(this._handleError.bind(this), this.session.log);
+
+        //Me subscribo al metodo para actualizar el número de tareas
+        this.session.subscribe(
+          "io.crossbar.app.oncreatetask",
+          this._handleTask.bind(this))
+          .then(this.session.log)
+          .catch(this._handleError.bind(this));
+
+        //Me subscribo al metodo para indicar que se ha almacenado la lista
+        this.session.subscribe(
+          "io.crossbar.app.updatesavetime",
+          this._handleSave.bind(this))
+          .then(this.session.log)
+          .catch(this._handleError.bind(this));
+
+        //Me subscribo al metodo para indicar que se ha almacenado la lista
+        this.session.subscribe(
+          "io.crossbar.app.updateall",
+          this._handleTask.bind(this))
+          .then(this.session.log)
+          .catch(this._handleError.bind(this));
+
       }
 
       _errorChanged() {
-        //alert("Esto es un error "+this.lastError);
-      }
-
-      _sessionChanged() {
-        this.session.log("Session open my-app: "+ this.session.id);
-        this.$.here.innerText = this.session.id;
-
-        /*var call = document.createElement("crossbar-call");
-        call.setAttribute("id", "getvisitors");
-        call.setAttribute("session", "{{session}}");
-        call.setAttribute("method", "io.crossbar.app.getvisitors");
-        call.setAttribute("last-request", "{{lastRequest}}");
-        call.setAttribute("last-response", '{{lastResponse}}');
-        call.setAttribute("last-error", '{{lastError}}');
-
-        this.$.calling.appendChild(call);*/
-
+        alert("Error de la conexión");
       }
 
       _routePageChanged(page) {
