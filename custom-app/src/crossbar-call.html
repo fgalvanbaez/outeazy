@@ -1,0 +1,241 @@
+<!--
+Property of Francisco A. Galván Báez
+-->
+
+<!--añado polymer-->
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<dom-module id="crossbar-call">
+  <template>
+    <style>
+    </style>
+  </template>
+
+  <script>
+
+    class CrossbarCall extends Polymer.Element {
+
+      static get is() { return 'crossbar-call'; }
+
+      static get properties() {
+        return {
+
+          session: {
+            type: Object,
+            observer: '_sessionChanged',
+          },
+
+          method: {
+            type: String,
+            notify: true,
+          },
+
+          args: {
+            type: Array,
+            value: []
+          },
+
+          kwargs: {
+            type: Object,
+            value: {}
+          },
+
+          lastError: {
+            type: Object,
+            notify: true,
+            readOnly: true
+          },
+
+          lastResponse: {
+            type: Object,
+            notify: true,
+            readOnly: true
+          },
+
+          lastRequest: {
+            type: Object,
+            notify: true,
+            readOnly: true
+          },
+
+          loading: {
+            type: Boolean,
+            notify: true,
+            readOnly: true
+          },
+
+          auto: {
+            type: Boolean,
+            value: false
+          },
+
+          activeRequests: {
+            type: Array,
+            notify: true,
+            readOnly: true,
+            value: function() {
+              return [];
+            }
+          },
+
+          debounceDuration: {
+            type: Number,
+            value: 0,
+            notify: true
+          },
+        };
+      }
+
+      static get observers() {
+        return [
+          '_requestOptionsChanged(session, method, auto, args.*, kwargs.*)',
+        ];
+      }
+
+      /*Lifecycle*/
+      constructor() {
+        super();
+        console.log(this.localName + '#' + 'constructor');
+      }
+
+      ready() {
+        super.ready();
+        console.log(this.localName + '#' + 'ready');
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        console.log(this.localName + '#' + 'connectedCallback');
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        console.log(this.localName + '#' + 'disconnectedCallback');
+      }
+
+      generateRequest() {
+        if (this.method == null || this.session == null) {
+          return;
+        }
+
+        //alert("En call "+ this.method);
+        var response = this.session.call(this.method, this.args, this.kwargs);
+        var request = {
+          method: this.method,
+          args: this.args.slice(0),
+          kwargs: this.kwargs,
+          response: response
+        };
+        this.activeRequests.push(request);
+        response = request.response
+          .then(this._handleResponse.bind(this, request))
+          .catch(this._handleError.bind(this, request))
+          .then(this._discardRequest.bind(this, request));
+
+        request["response"] = response;
+        this._setLastRequest(request);
+        this._setLoading(true);
+        //this.fire('request', request, {bubbles: false});
+        this.dispatchEvent(new CustomEvent('request', {request: request}, {bubbles: false}));
+        return request;
+      }
+
+
+      _requestOptionsChanged() {
+        /*this._debounce(function() {
+          if(this.auto) {
+            this.generateRequest();
+          }
+        }, this.debounceDuration);*/
+        this.generateRequest();
+      }
+
+      _handleResponse(request, response) {
+        if (request === this.lastRequest) {
+
+          //EN respuesta envio la respuesta en si y cual fue el metodo de la llamada
+          //para identificarlo en origen.
+          this._setLastResponse({'method': this.method, 'response': response});
+          this._setLastError(null);
+          this._setLoading(false);
+        }
+        request.response = response;
+        //this.fire('response', request, {bubbles: false});
+        this.dispatchEvent(new CustomEvent('response', {request: request}, {bubble: false}));
+        return response;
+      }
+
+      _discardRequest(request, response) {
+        var requestIndex = this.activeRequests.indexOf(request);
+        if (requestIndex > -1) {
+          this.activeRequests.splice(requestIndex, 1);
+        }
+        return response;
+      }
+
+      _handleError(request, error) {
+        if (request === this.lastRequest) {
+          this._setLastError({
+            request: request,
+            error: error
+          });
+          this._setLastResponse(null);
+          this._setLoading(false);
+        }
+        //this.fire('error', {request: request, error: error}, {bubbles: false});
+        this.dispatchEvent(new CustomEvent('error', {request: request, error:error}, {bubbles: false}));
+        return Promise.reject(error);
+      }
+
+      /*_debounce(func, wait, immediate) {
+          // 'private' variable for instance
+          // The returned function will be able to reference this due to closure.
+          // Each call to the returned function will share this common timer.
+          var timeout;
+
+          // Calling debounce returns a new anonymous function
+          return function() {
+              // reference the context and args for the setTimeout function
+              var context = this,
+                  args = arguments;
+
+              // Should the function be called now? If immediate is true
+              //   and not already in a timeout then the answer is: Yes
+              var callNow = immediate && !timeout;
+
+              // This is the basic debounce behaviour where you can call this
+              //   function several times, but it will only execute once
+              //   [before or after imposing a delay].
+              //   Each time the returned function is called, the timer starts over.
+              clearTimeout(timeout);
+
+              // Set the new timeout
+              timeout = setTimeout(function() {
+
+                   // Inside the timeout function, clear the timeout variable
+                   // which will let the next execution run when in 'immediate' mode
+                   timeout = null;
+
+                   // Check if the function already ran with the immediate flag
+                   if (!immediate) {
+                     // Call the original function with apply
+                     // apply lets you define the 'this' object as well as the arguments
+                     //    (both captured before setTimeout)
+                     func.apply(context, args);
+                   }
+              }, wait);
+
+              // Immediate mode and no wait timer? Execute the function..
+              if (callNow) func.apply(context, args);
+           }
+         }*/
+
+         //observers
+         _sessionChanged() {
+           this.session.log("Session id call "+ this.session.id)
+         }
+    }
+
+    window.customElements.define(CrossbarCall.is, CrossbarCall);
+  </script>
+</dom-module>

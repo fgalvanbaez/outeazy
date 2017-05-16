@@ -47,8 +47,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <div class="card">
       <paper-input id="taskInput" label="Introduzca tarea">
-        <paper-icon-button icon="mail" prefix></paper-icon-button>
-        <paper-icon-button icon="mail" suffix></paper-icon-button>
+        <!--<paper-icon-button icon="mail" prefix></paper-icon-button>
+        <paper-icon-button icon="mail" suffix></paper-icon-button>-->
       </paper-input>
       <paper-icon-button id="btnAgregar" icon="polymer" class="btnAgregar" value="Agregar tarea" type="button">
       <div id="numTasks" class="circle"></div>
@@ -60,13 +60,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
 
   /*CREACION DEL WEBSOCKET*/
-  <!-- Pongo autobahn en modo debug -->
+  <!-- Pongo autobahn en modo debug
   <script>AUTOBAHN_DEBUG = true;</script>
 
-  <!-- Script para añadir autobahnhjs -->
+  <!-- Script para añadir autobahnhjs
   <script src="../bower_components/autobahnjs/autobahn.min.js"></script>
 
-  <!-- JS para evitar los errores de valores cíclicos -->
+  <!-- JS para evitar los errores de valores cíclicos
   <script src="../bower_components/domjson/dist/domJSON.min.js"></script>
 
   <!-- Script principal de Polymer -->
@@ -77,9 +77,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       static get properties() {
         return {
-          delete: {
+          session: {
             type: Object,
-          }
+          },
+          taskList: {
+            type: Array,
+            observer: "_taskListChanged",
+          },
         }
       }
 
@@ -438,6 +442,47 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       disconnectedCallback(){
         super.disconnectedCallback();
         console.log(this.localName + '#' + 'disconnectedCallback');
+      }
+
+      _taskListChanged() {
+        alert("Me llego algo");
+        if (len(this.taskList) === 0) {
+          while (lista.firstChild) {
+            lista.removeChild(lista.firstChild);
+          }
+        }
+        else {
+          for (key in this.taskList) {
+            //Convierto str a JSON object
+            //var myJSON = JSON.parse(args[0][1]["task"+x]);
+            var myJSON = JSON.parse(this.taskList[key])
+            //alert(args[0][1]["task"+x])
+            var idTask = myJSON.node.id
+
+            //convierto el JSON object en un nodo del DOM
+            var nodo = domJSON.toDOM(myJSON);
+
+            //Creo botón para eliminar la tarea
+            var btn = document.createElement("paper-icon-button");
+            btn.id = "del" + idTask;
+            btn.icon = 'delete';
+            //btn.value = "Eliminar";
+            //btn.type = "button";
+            btn.addEventListener('click', function(evt) {
+              alert(evt.target.id)
+              var correctID = evt.target.id.replace("del", "");
+              alert("Eliminando tarea "+ correctID);
+              session.call("io.crossbar.app.deltask", [correctID])
+            });
+
+            //Añado el botón al nodo
+            nodo.appendChild(btn);
+
+            //Añado el nodo al DOM
+            lista.appendChild(nodo);
+          }
+
+        }
       }
 
     }

@@ -1,0 +1,150 @@
+<!--
+Property of Francisco A. Galván Báez
+-->
+
+<!--añado polymer-->
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<!-- Script para añadir autobahnhjs -->
+<script src="../bower_components/autobahnjs/autobahn.min.js"></script>
+
+<!-- JS para evitar los errores de valores cíclicos -->
+<script src="../bower_components/domjson/dist/domJSON.min.js"></script>
+
+<!-- Pongo autobahn en modo debug -->
+<script>AUTOBAHN_DEBUG = true;</script>
+
+
+<dom-module id="crossbar-connection">
+  <template>
+    <style>
+    </style>
+  </template>
+
+  <script>
+
+    class CrossbarConnection extends Polymer.Element {
+
+      static get is() { return 'crossbar-connection'; }
+
+      static get properties() {
+        return {
+
+          url: {
+            type: String,
+            notify: true,
+            //value: "ws://localhost:8080/ws",
+          },
+
+          realm: {
+            type: String,
+            notify: true,
+            //value: 'public',
+          },
+
+          connection: {
+            type: Object,
+            notify: true,
+            readOnly: true,
+            value: null,
+          },
+
+          session: {
+            type: Object,
+            notify: true,
+            readOnly: true,
+          },
+
+          connected: {
+            type: Boolean,
+            readOnly: true,
+            notify: true,
+            value: false,
+          },
+
+          open: {
+            type: Boolean,
+            readOnly: true,
+            notify: true,
+            value: false,
+          },
+
+          error: {
+            type: Object,
+            readOnly: true,
+            notify: true
+          },
+
+          retrying: {
+            type: Boolean,
+            readOnly: true,
+            notify: true,
+            value: false
+          },
+
+        };
+      }
+
+      static get observers() {
+        return [
+          '_connectionOptionsChanged(url, realm)',
+        ];
+      }
+
+      /*Lifecycle*/
+      constructor() {
+        super();
+        console.log(this.localName + '#' + 'constructor');
+      }
+
+      ready() {
+        super.ready();
+        console.log(this.localName + '#' + 'ready');
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        console.log(this.localName + '#' + 'connectedCallback');
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        console.log(this.localName + '#' + 'disconnectedCallback');
+      }
+
+      _connectionOptionsChanged() {
+        if (this.connection) {
+          this.connection.close();
+          this._setConnection(null);
+        }
+        var connection = new autobahn.Connection({
+          url: this.url,
+          realm: this.realm,
+        });
+        this._setConnection(connection);
+
+        connection.onopen = function(session, details) {
+          this._setSession(session);
+          //this.fire('open', connection);
+          this.dispatchEvent(new CustomEvent('open', {connection:connection}));
+          this._connectedStatusChanged();
+          console.log("Connected:", details);
+          session.log("Session open: ", session.id);
+        }.bind(this);
+
+        connection.onclose = function(reason, details) {
+          this._setSession(null);
+          this._setError({reason: reason, details: details});
+          //this.fire('close', connection);
+          this.dispatchEvent(new CustomEvent('close', {connection:connection}));
+          this._connectedStatusChanged();
+          console.log("Disconnected:", reason);
+        }.bind(this);
+
+        connection.open();
+      }
+    }
+
+    window.customElements.define(CrossbarConnection.is, CrossbarConnection);
+  </script>
+</dom-module>

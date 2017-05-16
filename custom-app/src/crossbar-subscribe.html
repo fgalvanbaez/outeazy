@@ -1,0 +1,162 @@
+<!--
+Property of Francisco A. Galván Báez
+-->
+
+<!--añado polymer-->
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<dom-module id="crossbar-subscribe">
+  <template>
+    <style>
+    </style>
+  </template>
+
+  <script>
+
+    class CrossbarSubscribe extends Polymer.Element {
+
+      static get is() { return 'crossbar-subscribe'; }
+
+      static get properties() {
+        return {
+
+          session: {
+            type: Object,
+            observer: '_sessionChanged',
+          },
+
+          subscription: {
+            type: Object,
+            notify: true,
+            readOnly: true
+          },
+
+          subscriptionError: {
+            type: Object,
+            notify: true,
+            readOnly: true
+          },
+
+          topic: {
+            type: String,
+            notify: true,
+            value: null
+          },
+
+          auto: {
+            type: Boolean,
+            value: false
+          },
+
+          lastEvent: {
+            type: Object,
+            notify: true,
+            readOnly: true
+          },
+        };
+      }
+
+      static get observers() {
+        return [
+          '_subscriptionOptionsChanged(session, topic)',
+        ];
+      }
+
+      /*Lifecycle*/
+      constructor() {
+        super();
+        console.log(this.localName + '#' + 'constructor');
+      }
+
+      ready() {
+        super.ready();
+        console.log(this.localName + '#' + 'ready');
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        console.log(this.localName + '#' + 'connectedCallback');
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        console.log(this.localName + '#' + 'disconnectedCallback');
+      }
+
+
+      subscribe() {
+        if (this.session == null || this.topic == null) {
+          return;
+        }
+        var options = {};
+        if (this.prefix) {
+          options.match = 'prefix';
+        } else if(this.wildcard) {
+          options.match = 'wildcard';
+        }
+        return this.unsubscribe().then(function() {
+          return this.session
+            .subscribe(this.topic, this._handleEvent.bind(this), options)
+            .then(this._handleSubscription.bind(this))
+            .catch(this._handleError.bind(this));
+        }.bind(this));
+      }
+
+      unsubscribe() {
+        var result = Promise.resolve();
+        if (this.subscription && this.session) {
+          result = this.session.unsubscribe(this.subscription);
+          //this.fire('unsubscribe', this.subscription);
+          this.dispatchEvent(new CustomEvent('unsubscribe', this.subscription));
+          this._setSubscription(null);
+        }
+        return result;
+      }
+
+      _subscriptionOptionsChanged() {
+        /*this.debounce('subscribe', function() {
+          if(this.auto) {
+            this.subscribe();
+          }
+        }, this.debounceDuration);*/
+        this.subscribe();
+      }
+
+      _handleSubscription(subscription) {
+        this._setSubscription(subscription);
+        this._setSubscriptionError(null);
+        this._setLastEvent(null);
+        //this.fire('subscribe', subscription);
+        this.dispatchEvent(new CustomEvent('subscribe', {subscription: subscription}));
+      }
+
+      _handleError(error) {
+        this._setSubscription(null);
+        this._setSubscriptionError(error);
+        //this.fire('error', error);
+        this.dispatchEvent(new CustomEvent('error', {error: error}));
+      }
+
+      _handleEvent(args, kwargs, details) {
+        var event = {args: args, kwargs: kwargs, details: details};
+        //this.fire('event', event);
+        this.dispatchEvent(new CustomEvent('event', {event: event}));
+        //alert("Topic "+this.topic+ " response "+ event.args[0]);
+
+        //EN respuesta envio la respuesta en si y cual fue el metodo de la llamada
+        //para identificarlo en origen.
+        this._setLastEvent({'method': this.topic, 'response': event});
+      }
+      detached() {
+        this.unsubscribe();
+      }
+
+       //observers
+       _sessionChanged() {
+         this.session.log("Session id call "+ this.session.id)
+       }
+    }
+
+    window.customElements.define(CrossbarSubscribe.is, CrossbarSubscribe);
+  </script>
+</dom-module>
