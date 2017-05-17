@@ -28,7 +28,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../bower_components/paper-badge/paper-badge.html">
 
+
 <link rel="import" href="my-icons.html">
+<link rel="import" href="shared-styles.html">
 
 
 <!-- Importo mi otro custom element -->
@@ -43,7 +45,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <dom-module id="my-app">
   <template>
-    <style>
+    <style include="shared-styles">
       :host {
         --app-primary-color: #4285f4;
         --app-secondary-color: black;
@@ -138,18 +140,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             attr-for-selected="name"
             fallback-selection="view404"
             role="main">-->
-
-          <div class="card">
-            <paper-input id="tTask" label="Introduzca tarea"></paper-input>
-            <paper-fab icon="icons:add" on-tap="_postTask"></paper-fab>
-          </div>
-          <my-view1
-            name="view1"
-            session="{{session}}"
-            task-list="{{taskList}}">
-          </my-view1>
+            <div class="card">
+              <paper-input id="tTask" label="Introduzca tarea"></paper-input>
+              <paper-fab icon="icons:add" on-tap="_postTask"></paper-fab>
+            </div>
 
 
+            <my-view1
+              name="view1"
+              session="{{session}}"
+              task-list="{{taskList}}">
+            </my-view1>
           <!--<my-view404 name="view404"></my-view404>-->
         <!--</iron-pages>-->
       </app-header-layout>
@@ -181,6 +182,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           },*/
           session: {
             type: Object,
+            notify: true,
             observer: '_sessionChanged',
           },
           /*lastRequest: {
@@ -237,14 +239,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       _postTask() {
         if (this.$.tTask.value) {
-          alert(this.$.tTask.value);
-
           console.log(this.$.tTask.value);
           var nuevaTarea = document.createElement("div");
 
           var index = document.createElement('div');
           index.setAttribute('class', 'circle');
-          index.innerText = 0;
+          index.innerText = this.idTask;
           nuevaTarea.appendChild(index);
 
           var valor = document.createTextNode(this.$.tTask.value);
@@ -366,13 +366,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           .then(this.session.log)
           .catch(this._handleError.bind(this));
 
-        //Me subscribo al metodo para indicar que se ha almacenado la lista
+        //Me subscribo al metodo para actualizar la lista en caso de una eliminacion
         this.session.subscribe(
           "io.crossbar.app.updateall",
           this._handleTask.bind(this))
           .then(this.session.log)
           .catch(this._handleError.bind(this));
 
+
+          //NO esta funcionando este listener
+        this.$.tTask.addEventListener("keypress",
+          function (evt) {
+            var key = evt.which || evt.keyCode;
+            if (key === 13) {
+              this._postTask;
+            }
+          });
       }
 
       _errorChanged() {

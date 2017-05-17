@@ -55,7 +55,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <div id="visitors" class="circle"></div>
     </div>-->
 
-    <div id="tasks" class=""></div>
+    <div id="lista" class=""></div>
 
   </template>
 
@@ -69,12 +69,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return {
           session: {
             type: Object,
+            observer: "_sessionChanged",
           },
           taskList: {
             type: Array,
-            observer: "_taskListChanged",
+            //observer: "_taskListChanged",
           },
         }
+      }
+
+      static get observers() {
+        return [
+        ];
       }
 
       constructor(){
@@ -90,343 +96,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       connectedCallback() {
         super.connectedCallback();
         console.log(this.localName + '#' + 'connectedCallback');
-
-        //Conexion del websocket
-        /*var url;
-        if (document.location.origin == "file://") {
-           url = "ws://127.0.0.1:8080/ws";
-        } else {
-           url = (document.location.protocol === "http:" ? "ws:" : "wss:") + "//" +
-                       document.location.host + "/ws";
-        }
-        var connection = new autobahn.Connection({
-           url: url,
-           transports: [
-             {
-               'type': 'websocket',
-               'url': url,
-             },
-           ],
-           realm: "public",
-        });*/
-        /*var connection = new autobahn.Connection({
-           url: "ws://localhost:8080/ws",
-           realm: "public"
-        });*/
-
-        // Variables
-        /*Polymer builds a static map of node IDs when the element initializes
-        its DOM template, to provide convenient access to frequently used nodes
-        without the need to query for them manually. Any node specified in the
-        element's template with an id is stored on the this.$ hash by id.*/
-        /*var id = 0;
-        var lista = this.$.taskList;//document.getElementById("task-list");
-        var tareaInput = this.$.taskInput;//document.getElementById("task-input");
-        var btnNuevaTarea = this.$.btnAgregar//document.getElementById("btn-agregar");
-        var visitors = this.$.visitors;//document.getElementById("visitors");
-        var numTasks = this.$.numTasks;//document.getElementById("numTasks");
-        var delAll = this.$.delete;
-        var saveAll = this.$.save;
-        var lastsaved = this.$.lastsaved;
-        var dragSrcEl = null;
-
-        //Funciones para que las tareas sean DnD
-        /*function handleDragStart(e) {
-          this.style.opacity = '0.4';  // this / e.target is the source node.
-        }
-
-        function handleDragOver(e) {
-          if (e.preventDefault) {
-            e.preventDefault(); // Necessary. Allows us to drop.
-          }
-          e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
-          return false;
-        }
-
-        function handleDragEnter(e) {
-          // this / e.target is the current hover target.
-          this.classList.add('over');
-        }
-
-        function handleDragLeave(e) {
-          this.classList.remove('over');  // this / e.target is previous target element.
-        }
-
-        function handleDrop(e) {
-          // this/e.target is current target element.
-          if (e.stopPropagation) {
-            e.stopPropagation(); // Stops some browsers from redirecting.
-          }
-          // Don't do anything if dropping the same column we're dragging.
-          if (dragSrcEl != this) {
-            // Set the source column's HTML to the HTML of the columnwe dropped on.
-            dragSrcEl.innerHTML = this.innerHTML;
-            this.innerHTML = e.dataTransfer.getData('text/html');
-          }
-
-          return false;
-        }
-
-        function handleDragEnd(e) {
-          // this/e.target is the source node.
-          while (lista.firstChild) {
-            lista.classList.remove('over');
-          }
-        }
-
-        function handleDragStart(e) {
-          // Target (this) element is the source node.
-          this.style.opacity = '0.4';
-
-          dragSrcEl = this;
-
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/html', this.innerHTML);
-        }*/
-
-
-        // Función para agregar tarea al DOM
-        /*var agregarTarea = function(contenido) {
-
-          console.log("El valor en tarea es: " + contenido);
-          var nuevaTarea = document.createElement("div");
-
-          var index = document.createElement('div');
-          index.setAttribute("class", "circle");
-          index.innerText = id;
-          nuevaTarea.appendChild(index);
-
-          var valor = document.createTextNode(contenido);
-          nuevaTarea.appendChild(valor);
-
-          // Asigno atributos
-          nuevaTarea.setAttribute("id", "task" + id);
-          nuevaTarea.setAttribute("class", "card");
-          nuevaTarea.setAttribute("draggable", "true");
-          // Agregamos la nueva tarea a la lista
-          //lista.appendChild(nuevaTarea);
-
-          console.log("El valor en tarea es1: " + contenido);
-          return nuevaTarea;
-        }
-
-        var enviarTarea = function(session) {
-          if ((tareaInput.value !== "") && (tareaInput.value !== undefined)) {
-            console.log("El valor es: " + tareaInput.value);
-
-            //alert(JSON.stringify(lista.childNodes));
-            //var lastChild = lista.childNodes[id];
-
-            //Creo la nueva tarea
-            var nodo = agregarTarea(tareaInput.value);
-
-            //Añado listeners DnD a la tarea
-            /*nodo.addEventListener('dragstart', handleDragStart, false);
-            nodo.addEventListener('dragenter', handleDragEnter, false);
-            nodo.addEventListener('dragover', handleDragOver, false);
-            nodo.addEventListener('dragleave', handleDragLeave, false);
-            nodo.addEventListener('drop', handleDrop, false);
-            nodo.addEventListener('dragend', handleDragEnd, false);*/
-
-            //inicializo el valor de la tarea de nuevo
-            /*tareaInput.value = "";
-
-            //Convierto un nodo en JSON
-            var myJSON = domJSON.toJSON(nodo);
-
-            //Convierto JSON object a String
-            var myStr = JSON.stringify(myJSON);
-
-           session.call("io.crossbar.app.createtask",
-           [nodo.id, myStr]).then(session.log);
-         }
-        }
-
-        connection.onopen = function (session, details) {
-
-          console.log("Connected:", details);
-          session.log("Session open: ", session.id);
-
-          //Get the visitors in a new connection
-          session.call("io.crossbar.app.getvisitors").then(
-            function(res) {
-              visitors.innerText = res
-            },
-            session.log);
-
-          //Update visitors in new connections
-          session.subscribe("io.crossbar.app.visitorupdate",
-            function(args) {
-              visitors.innerText = args[0];
-            }
-          ).then(session.log);
-
-
-          //Get tasks in a new conection
-          session.call("io.crossbar.app.gettask").then(
-           function(res){
-             id = res[0];
-             numTasks.innerText = id;
-
-             //Convierto str en JSON object
-             for (var x=0; x<id; x++) {
-               //Convierto str a JSON object
-               var myJSON = JSON.parse(res[1]["task"+x]);
-               var idTask = myJSON.node.id
-
-               //convierto el JSON object en un nodo del DOM
-               var nodo = domJSON.toDOM(myJSON);
-
-               //Creo botón para eliminar la tarea
-               var btn = document.createElement("paper-icon-button");
-               btn.id = "del" + idTask;
-               btn.icon = 'delete';
-               //btn.type = "button";
-               //btn.value = "Eliminar";
-               btn.addEventListener('click', function(evt) {
-                 alert(evt.target.id)
-                 var correctID = evt.target.id.replace("del", "");
-                 alert("Eliminando tarea "+ correctID);
-                 session.call("io.crossbar.app.deltask", [correctID])
-               });
-
-               //Añado el boton al nodo
-               nodo.appendChild(btn);
-
-               //Añado el nodo a la lista del DOM
-               lista.appendChild(nodo);
-             }
-           }, session.log
-         );
-
-          //Suscribo al cliente a la funcion onupdatetext(actualiza las lista)
-          session.subscribe("io.crossbar.app.oncreatetask",
-            function(args) {
-              numTasks.innerText = args[0][0];
-
-              //Convierto el string en un JSON
-              var myJSON = JSON.parse(args[0][1]);
-              var idTask = myJSON.node.id;
-              //Convierto el JSON en un nodo del DOM
-              var nodo = domJSON.toDOM(myJSON);
-
-              //Creo el elemento para eliminar la tarea
-              var btn = document.createElement("paper-icon-button");
-              btn.id = "del" + idTask;
-              btn.icon = 'delete';
-              //btn.type = "button";
-              //btn.value = "Eliminar";
-              btn.addEventListener('click', function(evt) {
-                alert("Eliminando tarea "+ idTask);
-                alert(evt.target.id)
-                session.call("io.crossbar.app.deltask", [idTask])
-              });
-
-              //Añado el botón al nodo
-              nodo.appendChild(btn);
-
-              //Añado el nodo al DOM
-              lista.appendChild(nodo);
-
-              //Aumento el contador de tareas
-              id++;
-            }).then(session.log);
-
-          session.subscribe("io.crossbar.app.updateall",
-            function(args) {
-              //Eliminar todas la tareas
-              id = args[0][0];
-              numTasks.innerText = id;
-              tareaInput.value = "";
-              while (lista.firstChild) {
-                lista.removeChild(lista.firstChild);
-              }
-
-              //Si solo se elimino una tarea, se actualiza la lista
-              if (id > 0) {
-
-                //Convierto str en JSON object
-                for (var x=0; x<id; x++) {
-                  //Convierto str a JSON object
-                  var myJSON = JSON.parse(args[0][1]["task"+x]);
-                  //alert(args[0][1]["task"+x])
-                  var idTask = myJSON.node.id
-
-                  //convierto el JSON object en un nodo del DOM
-                  var nodo = domJSON.toDOM(myJSON);
-
-                  //Creo botón para eliminar la tarea
-                  var btn = document.createElement("paper-icon-button");
-                  btn.id = "del" + idTask;
-                  btn.icon = 'delete';
-                  //btn.value = "Eliminar";
-                  //btn.type = "button";
-                  btn.addEventListener('click', function(evt) {
-                    alert(evt.target.id)
-                    var correctID = evt.target.id.replace("del", "");
-                    alert("Eliminando tarea "+ correctID);
-                    session.call("io.crossbar.app.deltask", [correctID])
-                  });
-
-                  //Añado el botón al nodo
-                  nodo.appendChild(btn);
-
-                  //Añado el nodo al DOM
-                  lista.appendChild(nodo);
-                }
-              }
-            }).then(session.log);
-
-            session.subscribe("io.crossbar.app.updatesavetime",
-              function(args) {
-                var d = new Date();
-                var date = d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()+" "+d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()
-                lastsaved.innerText = date;
-              }).then(session.log);
-
-          //LISTENERS
-          //Listener para agregar tarea en todas las sesiones
-          btnNuevaTarea.addEventListener("click",
-          function(evt) {
-            enviarTarea(session);
-          });
-
-          //Listener para agregar tarea en todas las sesiones (ENTER)
-          tareaInput.addEventListener("keypress",
-          function(evt) {
-            var key = evt.which || evt.keyCode;
-            if (key === 13) {
-              enviarTarea(session);
-            }
-          });
-
-          //Listener para eliminar toda la lista de tareas
-          delAll.addEventListener("click", function(evt) {
-            if (id > 0) {
-              alert("Voy a eliminar todo");
-              session.call("io.crossbar.app.delall").then(session.log);
-            }
-          });
-
-          //Listener para guardar toda la lista de tareas
-          saveAll.addEventListener("click", function(evt) {
-            if (id > 0) {
-              alert("Voy a guardar todo");
-              session.call("io.crossbar.app.saveall").then(session.log);
-            }
-          });
-        }
-
-        connection.onclose = function (reason, details) {
-          numTasks.innerText = "0";
-          visitors.innerText = "0";
-          while (lista.firstChild) {
-            lista.removeChild(lista.firstChild);
-          }
-         console.log("Connection lost: " + reason);
-        }
-
-        connection.open();*/
       }
 
       disconnectedCallback(){
@@ -434,47 +103,64 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         console.log(this.localName + '#' + 'disconnectedCallback');
       }
 
-      _taskListChanged() {
-        //alert("Me llego algo");
-        /*if (len(this.taskList) === 0) {
+      _generateTask(key) {
+        //Convierto str a JSON object
+        //var myJSON = JSON.parse(args[0][1]["task"+x]);
+        var myJSON = JSON.parse(this.taskList[key]);
+        //alert(args[0][1]["task"+x])
+        var idTask = myJSON.node.id;
+
+        //convierto el JSON object en un nodo del DOM
+        var nodo = domJSON.toDOM(myJSON);
+
+        //Creo botón para eliminar la tarea
+        var btn = document.createElement("paper-icon-button");
+        btn.id = "del" + idTask;
+        btn.icon = 'delete';
+        //btn.value = "Eliminar";
+        //btn.type = "button";
+        btn.addEventListener('click', function(evt) {
+          alert(evt.target.id)
+          var correctID = evt.target.id.replace("del", "");
+          alert("Eliminando tarea "+ correctID);
+          this.session.call("io.crossbar.app.deltask", [correctID])
+            .then(this.session.log);
+        });
+
+        //Añado el botón al nodo
+        nodo.appendChild(btn);
+
+        //Añado el nodo al DOM
+        this.$.lista.appendChild(nodo);
+      }
+
+      //observers
+      _sessionChanged() {
+        this.session.log("Session open my-view1: "+ this.session.id);
+        //alert("La sesion esta creada aqui");
+        //this._taskListChanged();
+        this._createPropertyObserver('taskList', '_taskListChanged', true);
+      }
+
+      _taskListChanged(session, taskList) {
+        console.log("Me llego algo: "+Object.keys(this.taskList).length);
+        var ntasks = Object.keys(this.taskList).length;
+        if ( ntasks === 0) {
           while (lista.firstChild) {
             lista.removeChild(lista.firstChild);
           }
-        }
-        else {
+        } else if (ntasks === 1) { //Cuando hay solo un elemento busco la clave y lo creo
+          var key;
           for (key in this.taskList) {
-            //Convierto str a JSON object
-            //var myJSON = JSON.parse(args[0][1]["task"+x]);
-            var myJSON = JSON.parse(this.taskList[key])
-            //alert(args[0][1]["task"+x])
-            var idTask = myJSON.node.id
-
-            //convierto el JSON object en un nodo del DOM
-            var nodo = domJSON.toDOM(myJSON);
-
-            //Creo botón para eliminar la tarea
-            var btn = document.createElement("paper-icon-button");
-            btn.id = "del" + idTask;
-            btn.icon = 'delete';
-            //btn.value = "Eliminar";
-            //btn.type = "button";
-            btn.addEventListener('click', function(evt) {
-              alert(evt.target.id)
-              var correctID = evt.target.id.replace("del", "");
-              alert("Eliminando tarea "+ correctID);
-              session.call("io.crossbar.app.deltask", [correctID])
-            });
-
-            //Añado el botón al nodo
-            nodo.appendChild(btn);
-
-            //Añado el nodo al DOM
-            lista.appendChild(nodo);
+            this._generateTask(key);
           }
-
-        }*/
+        } else {
+          var x;
+          for (x=0; x<ntasks; x++) { //Lo recorro asi para mostrarlos en orden
+            this._generateTask("task"+x);
+          }
+        }
       }
-
     }
 
     window.customElements.define(MyView1.is, MyView1);
