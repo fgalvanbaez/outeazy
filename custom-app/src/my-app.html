@@ -49,7 +49,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       :host {
         --app-primary-color: #4285f4;
         --app-secondary-color: black;
-
         display: block;
       }
 
@@ -141,7 +140,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             fallback-selection="view404"
             role="main">-->
             <div class="card">
-              <paper-input id="tTask" label="Introduzca tarea"></paper-input>
+              <paper-input id="tTask" mini label="Introduzca tarea">
+              </paper-input>
               <paper-fab icon="icons:add" on-tap="_postTask"></paper-fab>
             </div>
 
