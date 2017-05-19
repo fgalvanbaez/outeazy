@@ -34,6 +34,7 @@ from twisted.internet import reactor
 
 import re
 import json
+import sqlite3
 
 class appBackend(ApplicationSession):
 
@@ -44,6 +45,18 @@ class appBackend(ApplicationSession):
     def init(self):
         self._task = {}
         self._visitors = 0;
+        #Conectar con base de datos y rescatar info
+        #global conn
+        #conn = sqlite3.connect('example.db')
+        #global c
+        #c = conn.cursor()
+        #Insecure
+        #c.execute('CREATE TABLE IF NOT EXISTS Tasks (created TEXT, data TEXT')
+        #c.execute('SELECT * FROM Tasks ORDER BY created')
+        #data = c.fetchone()
+        #self._task = json.loads(data[1])
+        #c.execute("DELETE FROM Tasks WHERE created = '%s'" %data[0])
+        #conn.commit()
 
     #VISITORS
     @wamp.register(u'io.crossbar.app.getvisitors')
@@ -61,11 +74,11 @@ class appBackend(ApplicationSession):
 
         #Añadir el elemento la variable de python
         self._task[JSONobjectID] = JSONobject
-        item = {}
-        item[JSONobjectID] = JSONobject
+        #item = {}
+        #item[JSONobjectID] = JSONobject
 
         #Publico el JSON sin tratamiento hacia las demás instancias
-        self.publish('io.crossbar.app.oncreatetask', [len(self._task), item])
+        self.publish('io.crossbar.app.oncreatetask', [len(self._task), self._task])
         #return self._task
 
 

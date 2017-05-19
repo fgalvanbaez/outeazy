@@ -73,7 +73,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           },
           taskList: {
             type: Array,
-            //observer: "_taskListChanged",
+            observer: "_taskListChanged",
           },
         }
       }
@@ -109,9 +109,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var myJSON = JSON.parse(this.taskList[key]);
         //alert(args[0][1]["task"+x])
         var idTask = myJSON.node.id;
-
         //convierto el JSON object en un nodo del DOM
         var nodo = domJSON.toDOM(myJSON);
+
+        var index = document.createElement('div');
+        index.setAttribute('class', 'circle');
+        index.innerText = idTask.replace("task", "");
+        nodo.appendChild(index);
 
         //Creo botón para eliminar la tarea
         var btn = document.createElement("paper-icon-button");
@@ -119,13 +123,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         btn.icon = 'delete';
         //btn.value = "Eliminar";
         //btn.type = "button";
-        btn.addEventListener('click', function(evt) {
-          alert(evt.target.id)
-          var correctID = evt.target.id.replace("del", "");
-          alert("Eliminando tarea "+ correctID);
-          this.session.call("io.crossbar.app.deltask", [correctID])
-            .then(this.session.log);
-        });
+
+        //Necesito bindear la funcion del listener para
+        //que se reconozca la variable session
+        btn.addEventListener('click', this._handleDelTask.bind(this));
 
         //Añado el botón al nodo
         nodo.appendChild(btn);
@@ -134,31 +135,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.$.lista.appendChild(nodo);
       }
 
+      _handleDelTask(evt) {
+        alert(evt.target.id)
+        var correctID = evt.target.id.replace("del", "");
+        alert("Eliminando tarea "+ correctID);
+        this.session.call("io.crossbar.app.deltask", [correctID])
+          .then(this.session.log);
+      }
+
       //observers
       _sessionChanged() {
         this.session.log("Session open my-view1: "+ this.session.id);
         //alert("La sesion esta creada aqui");
         //this._taskListChanged();
-        this._createPropertyObserver('taskList', '_taskListChanged', true);
+        //this._createPropertyObserver('taskList', '_taskListChanged', true);
       }
 
       _taskListChanged(session, taskList) {
         console.log("Me llego algo: "+Object.keys(this.taskList).length);
         var ntasks = Object.keys(this.taskList).length;
-        if ( ntasks === 0) {
-          while (lista.firstChild) {
-            lista.removeChild(lista.firstChild);
-          }
-        } else if (ntasks === 1) { //Cuando hay solo un elemento busco la clave y lo creo
-          var key;
-          for (key in this.taskList) {
-            this._generateTask(key);
-          }
-        } else {
-          var x;
-          for (x=0; x<ntasks; x++) { //Lo recorro asi para mostrarlos en orden
-            this._generateTask("task"+x);
-          }
+        while (lista.firstChild) {
+          lista.removeChild(lista.firstChild);
+        }
+        var x;
+        for (x=0; x<ntasks; x++) { //Lo recorro asi para mostrarlos en orden
+          this._generateTask("task"+x);
         }
       }
     }

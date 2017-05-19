@@ -81,6 +81,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         color: black;
         font-weight: bold;
       }
+
     </style>
 
     <!--<app-location route="{{route}}"></app-location>
@@ -140,11 +141,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             fallback-selection="view404"
             role="main">-->
             <div class="card">
-              <paper-input id="tTask" mini label="Introduzca tarea">
+              <paper-input id="tTask" on-keydown="_checkForEnter" label="Introduzca tarea">
+                <iron-icon icon="icons:group-work" slot="prefix"></iron-icon>
+                <paper-fab align="right" mini slot="suffix" icon="icons:add" on-tap="_postTask"></paper-fab>
               </paper-input>
-              <paper-fab icon="icons:add" on-tap="_postTask"></paper-fab>
-            </div>
 
+            </div>
 
             <my-view1
               name="view1"
@@ -237,15 +239,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         console.log(this.localName + '#' + 'disconnectedCallback');
       }
 
+
+      _checkForEnter(evt) {
+        if (evt.keyCode === 13) {
+          this._postTask();
+        }
+      }
+
       _postTask() {
         if (this.$.tTask.value) {
           console.log(this.$.tTask.value);
           var nuevaTarea = document.createElement("div");
 
-          var index = document.createElement('div');
+          /*var index = document.createElement('div');
           index.setAttribute('class', 'circle');
           index.innerText = this.idTask;
-          nuevaTarea.appendChild(index);
+          nuevaTarea.appendChild(index);*/
 
           var valor = document.createTextNode(this.$.tTask.value);
           nuevaTarea.appendChild(valor);
@@ -385,7 +394,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       _errorChanged() {
-        alert("Error de la conexión");
+        console.log("my-app perdió la conexión");
       }
 
       _routePageChanged(page) {
