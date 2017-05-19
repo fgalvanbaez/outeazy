@@ -118,8 +118,8 @@ class appBackend(ApplicationSession):
                 #modifico el id al correcto y varios atributos
                 myJSON['node']['id'] = "task"+str(x)
                 myJSON['node']['attributes']['id'] = "task"+str(x)
-                myJSON['node']['childNodes'][0]['childNodes'][0]['data'] = str(x)
-                myJSON['node']['childNodes'][0]['childNodes'][0]['nodeValue'] = str(x)
+                #myJSON['node']['childNodes'][0]['childNodes'][0]['data'] = str(x)
+                #myJSON['node']['childNodes'][0]['childNodes'][0]['nodeValue'] = str(x)
 
                 #vuelvo a convertir en str
                 self._task["task"+str(x)] = json.dumps(myJSON)
