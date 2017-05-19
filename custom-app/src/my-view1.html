@@ -154,8 +154,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _taskListChanged(session, taskList) {
         console.log("Me llego algo: "+Object.keys(this.taskList).length);
         var ntasks = Object.keys(this.taskList).length;
-        while (lista.firstChild) {
-          lista.removeChild(lista.firstChild);
+        while (this.$.lista.firstChild) {
+          this.$.lista.removeChild(this.$.lista.firstChild);
         }
         var x;
         for (x=0; x<ntasks; x++) { //Lo recorro asi para mostrarlos en orden
