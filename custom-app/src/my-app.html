@@ -96,7 +96,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <!-- Main content -->
       <app-header-layout has-scrolling-region>
         <!-- Drawer content -->
-        <app-drawer id="drawer" slot="drawer" swipe-open>
+        <app-drawer id="drawer" slot="drawer" style="transition-duration:200ms; touch-action:pan-y;" position="left" persisten="" opened="">
           <app-toolbar>Menu</app-toolbar>
           <!--<iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
             <a name="view1" href="/">View One</a>
@@ -141,11 +141,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             fallback-selection="view404"
             role="main">-->
             <div class="card">
-              <paper-input id="tTask" on-keydown="_checkForEnter" label="Introduzca tarea">
-                <iron-icon icon="icons:group-work" slot="prefix"></iron-icon>
-                <paper-fab align="right" mini slot="suffix" icon="icons:add" on-tap="_postTask"></paper-fab>
-              </paper-input>
-
+              <div class="card-content">
+                <paper-input id="tTask" on-keydown="_checkForEnter" label="Introduzca tarea" required auto-validate error-message="Campo requerido!!" >
+                  <iron-icon icon="icons:group-work" slot="prefix"></iron-icon>
+                  <paper-fab align="right" slot="suffix" icon="icons:add" on-tap="_postTask"></paper-fab>
+                </paper-input>
+              </div>
             </div>
 
             <my-view1
@@ -249,30 +250,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _postTask() {
         if (this.$.tTask.value) {
           console.log(this.$.tTask.value);
-          var nuevaTarea = document.createElement("div");
+          //var nuevaTarea = document.createElement("div");
 
-          /*var index = document.createElement('div');
-          index.setAttribute('class', 'circle');
-          index.innerText = this.idTask;
-          nuevaTarea.appendChild(index);*/
-
-          var valor = document.createTextNode(this.$.tTask.value);
-          nuevaTarea.appendChild(valor);
-
-          // Asigno atributos
-          nuevaTarea.setAttribute("id", "task"+this.idTask);
-          nuevaTarea.setAttribute("class", "card");
-          nuevaTarea.setAttribute("draggable", "true");
-
-          //Convierto un nodo en JSON
-          var myJSON = domJSON.toJSON(nuevaTarea);
-
-          //Convierto JSON object a String
-          var myStr = JSON.stringify(myJSON);
+          var myStr = this.$.tTask.value;
 
           /*Genera una tarea un la envia al backend, el backend se encarga
           de hacer un publish con la nueva tarea incluida esta misma sesion*/
-          this.session.call("io.crossbar.app.createtask", [nuevaTarea.id, myStr])
+          this.session.call("io.crossbar.app.createtask", [("task"+this.idTask), myStr])
             .then(this.session.log);
             /*.then(this._handleTask.bind(this), this.session.log)
             .catch(this._handleError.bind(this));*/
@@ -280,7 +264,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.$.tTask.value = "";
 
         } else {
-          alert("el input es undefined");
+          //alert("el input es undefined");
         }
       }
 

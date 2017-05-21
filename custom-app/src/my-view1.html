@@ -13,6 +13,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+
 <link rel="import" href="shared-styles.html">
 
 
@@ -56,6 +59,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </div>-->
 
     <div id="lista" class=""></div>
+
+    <!--<paper-dialog id=dialog modal>
+      <paper-input id="tTask" on-keydown="_checkForEnter" label="Introduzca tarea" required auto-validate error-message="Campo requerido!!" >
+      <div class="buttons">
+        <paper-icon-button icon="icons:close" dialog-dismiss>Cancel</paper-icon-button>
+        <paper-icon-button icon="icons:add" dialog-confirm autofocus>Tap me to close</paper-icon-button>
+      </div>
+    </paper-dialog>-->
 
   </template>
 
@@ -106,45 +117,106 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _generateTask(key) {
         //Convierto str a JSON object
         //var myJSON = JSON.parse(args[0][1]["task"+x]);
-        var myJSON = JSON.parse(this.taskList[key]);
+        //var myJSON = JSON.parse(this.taskList[key]);
         //alert(args[0][1]["task"+x])
-        var idTask = myJSON.node.id;
+        //var idTask = key.replace('task', '');
         //convierto el JSON object en un nodo del DOM
-        var nodo = domJSON.toDOM(myJSON);
+        //var nodo = domJSON.toDOM(myJSON);
 
-        var index = document.createElement('div');
+        var node = document.createElement("div");
+        var myStr = this.taskList[key];
+
+        /*var index = document.createElement('div');
         index.setAttribute('class', 'circle');
-        index.innerText = idTask.replace("task", "");
-        nodo.appendChild(index);
+        index.innerText = key.replace('task', '');
+        node.appendChild(index);*/
 
-        //Creo botón para eliminar la tarea
+        var valor = document.createTextNode(myStr);
+        node.appendChild(valor);
+
+        // Asigno atributos
+        node.setAttribute("id", key);
+        node.setAttribute("class", "card");
+        node.setAttribute("draggable", "true");
+
+        //Creo botón para editar la tarea
         var btn = document.createElement("paper-icon-button");
-        btn.id = "edit" + idTask;
+        btn.id = "edit" + key;
         btn.icon = 'icons:create';
-        nodo.appendChild(btn);
+        btn.addEventListener('tap', this._handleEditTask.bind(this));
+        node.appendChild(btn);
 
         //Creo botón para eliminar la tarea
         btn = document.createElement("paper-icon-button");
-        btn.id = "del" + idTask;
+        btn.id = "del" + key;
         btn.icon = 'icons:delete';
-        //btn.value = "Eliminar";
-        //btn.type = "button";
-
-        //Necesito bindear la funcion del listener para
-        //que se reconozca la variable session
-        btn.addEventListener('click', this._handleDelTask.bind(this));
-
-        //Añado el botón al nodo
-        nodo.appendChild(btn);
+        btn.addEventListener('tap', this._handleDelTask.bind(this));
+        node.appendChild(btn);
 
         //Añado el nodo al DOM
-        this.$.lista.appendChild(nodo);
+        this.$.lista.appendChild(node);
+      }
+
+      _handleEditTask(evt) {
+
+        //alert('#mod'+evt.target.id);
+        //evt.target.icon = "icons:close";
+
+        /*var edits = document.querySelector('.edit');
+        if (edits.length > 0) {
+          this.$.lista.removeChild(edits);
+        }*/
+
+        //evt.target.addEventListener('tap', this._handleDelModTask.bind(this));
+
+        var fab = document.createElement('paper-fab');
+        fab.id = evt.target.id.replace('edit', '');
+        fab.slot="suffix";
+        fab.icon="icons:add";
+        fab.mini=true;
+        fab.addEventListener('tap', this._postTask.bind(this));
+
+        var input = document.createElement('paper-input');
+        input.id = "mod"+evt.target.id;
+        input.value = evt.target.parentNode.innerText;
+        input.appendChild(fab);
+        input.setAttribute('class', 'card edit');
+
+        //this.$.lista.removeChild(evt.target.parentNode);
+        evt.target.parentNode.parentNode.insertBefore(input, evt.target.parentNode.nextSibling);
+
+      }
+
+      _handleDelModTask(evt) {
+        this.$.lista.removeChild(document.querySelector('#mod'+evt.target.id));
+      }
+
+      _postTask(evt) {
+
+        //alert("Modificando tarea "+evt.target.id);
+        if (evt.target.parentNode.value) {
+          console.log(evt.target.parentNode.value);
+          console.log(evt.target.parentNode.id);
+          //var nuevaTarea = document.createElement("div");
+
+          var myStr = evt.target.parentNode.value;
+
+          /*Genera una tarea un la envia al backend, el backend se encarga
+          de hacer un publish con la nueva tarea incluida esta misma sesion*/
+          this.session.call("io.crossbar.app.createtask", [evt.target.id, myStr])
+            .then(this.session.log);
+            /*.then(this._handleTask.bind(this), this.session.log)
+            .catch(this._handleError.bind(this));*/
+
+          //this.$.tTask.value = "";
+        }
+
       }
 
       _handleDelTask(evt) {
-        alert(evt.target.id)
+        //alert(evt.target.id)
         var correctID = evt.target.id.replace("del", "");
-        alert("Eliminando tarea "+ correctID);
+        //alert("Eliminando tarea "+ correctID);
         this.session.call("io.crossbar.app.deltask", [correctID])
           .then(this.session.log);
       }

@@ -113,16 +113,16 @@ class appBackend(ApplicationSession):
             while (x < (len(self._task)-1)):
 
                 #convierto en json para cambiar el taskID
-                myJSON = json.loads(self._task["task"+str(x+1)])
+                #myJSON = json.loads(self._task["task"+str(x+1)])
 
                 #modifico el id al correcto y varios atributos
-                myJSON['node']['id'] = "task"+str(x)
-                myJSON['node']['attributes']['id'] = "task"+str(x)
+                #myJSON['node']['id'] = "task"+str(x)
+                #myJSON['node']['attributes']['id'] = "task"+str(x)
                 #myJSON['node']['childNodes'][0]['childNodes'][0]['data'] = str(x)
                 #myJSON['node']['childNodes'][0]['childNodes'][0]['nodeValue'] = str(x)
 
                 #vuelvo a convertir en str
-                self._task["task"+str(x)] = json.dumps(myJSON)
+                self._task["task"+str(x)] = self._task["task"+str(x+1)]
 
                 """#busco la subcadena taskID y lo reemplazo por el correcto
                 mySTR = self._task["task"+str(x+1)].replace(("task"+str(x+1)), ("task"+str(x)))
