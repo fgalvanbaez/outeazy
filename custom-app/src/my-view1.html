@@ -119,8 +119,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         //Creo botón para eliminar la tarea
         var btn = document.createElement("paper-icon-button");
+        btn.id = "edit" + idTask;
+        btn.icon = 'icons:create';
+        nodo.appendChild(btn);
+
+        //Creo botón para eliminar la tarea
+        btn = document.createElement("paper-icon-button");
         btn.id = "del" + idTask;
-        btn.icon = 'delete';
+        btn.icon = 'icons:delete';
         //btn.value = "Eliminar";
         //btn.type = "button";
 
