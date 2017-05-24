@@ -39,6 +39,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         -webkit-user-drag: element;
       }
 
+      .card {
+          cursor: move;
+      }
+
+      .card.over {
+        border: 2px solid #000;
+      }
+
     </style>
 
     <!--<div class="card">
@@ -86,6 +94,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             type: Array,
             observer: "_taskListChanged",
           },
+          _dragSrcEl: {
+            type: Object,
+          }
         }
       }
 
@@ -122,9 +133,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         //var idTask = key.replace('task', '');
         //convierto el JSON object en un nodo del DOM
         //var nodo = domJSON.toDOM(myJSON);
+        var mark = document.createElement('hr');
+        //mark.hidden = true;
+        mark.addEventListener('dragenter', this._handleDragEnterHr.bind(this));
+        mark.addEventListener('dragover', this._handleDragOverHr.bind(this));
+        mark.addEventListener('dragleave', this._handleDragLeaveHr.bind(this));
+        mark.addEventListener('drop', this._handleDropHr.bind(this));
+        mark.style.borderWidth = "1px";
+        mark.style.width = "75%";
+        this.$.lista.appendChild(mark);
+
 
         var node = document.createElement("div");
-        var myStr = this.taskList[key];
+        var myStr = this.taskList[key][0];
 
         /*var index = document.createElement('div');
         index.setAttribute('class', 'circle');
@@ -143,6 +164,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var btn = document.createElement("paper-icon-button");
         btn.id = "edit" + key;
         btn.icon = 'icons:create';
+        btn.style.textAlign = 'right';
         btn.addEventListener('tap', this._handleEditTask.bind(this));
         node.appendChild(btn);
 
@@ -150,11 +172,216 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         btn = document.createElement("paper-icon-button");
         btn.id = "del" + key;
         btn.icon = 'icons:delete';
+        btn.style.textAlign = 'right';
         btn.addEventListener('tap', this._handleDelTask.bind(this));
         node.appendChild(btn);
 
+        node.addEventListener('dragstart', this._handleDragStart.bind(this));
+        node.addEventListener('dragenter', this._handleDragEnter.bind(this));
+        node.addEventListener('dragover', this._handleDragOver.bind(this));
+        node.addEventListener('dragleave', this._handleDragLeave.bind(this));
+        node.addEventListener('drop', this._handleDrop.bind(this));
+        node.addEventListener('dragend', this._handleDragEnd.bind(this));
+
+
+        var x;
+        for (x=1; x<this.taskList[key].length; x++) {
+
+          var child = document.createElement('div');
+          child.id = key+"."+x;
+          child.classList.add('card');
+          //child.setAttribute('draggable', 'true');
+
+          var content = document.createTextNode(this.taskList[key][x]);
+          child.appendChild(content);
+
+          //Creo botón para editar la tarea
+          var b = document.createElement("paper-icon-button");
+          b.id = "edit" + child.id;
+          b.icon = 'icons:create';
+          b.style.textAlign = 'right';
+          b.addEventListener('tap', this._handleEditTask.bind(this));
+          child.appendChild(b);
+
+          //Creo botón para eliminar la tarea
+          b = document.createElement("paper-icon-button");
+          b.id = "del" + child.id;
+          b.icon = 'icons:delete';
+          b.style.textAlign = 'right';
+          b.addEventListener('tap', this._handleDelTask.bind(this));
+          child.appendChild(b);
+
+          /*child.addEventListener('dragstart', this._handleDragStartChild.bind(this));
+          child.addEventListener('dragenter', this._handleDragEnterChild.bind(this));
+          child.addEventListener('dragover', this._handleDragOverChild.bind(this));
+          child.addEventListener('dragleave', this._handleDragLeaveChild.bind(this));
+          child.addEventListener('drop', this._handleDropChild.bind(this));
+          child.addEventListener('dragend', this._handleDragEndChild.bind(this));
+          */
+          node.appendChild(child);
+        }
+
         //Añado el nodo al DOM
         this.$.lista.appendChild(node);
+      }
+
+      _handleDragStart(evt) {
+        //alert(evt.target.id);
+        console.log('DragStart: '+evt.target.id);
+        //evt.target.style.opacity = 0.4;
+        this._dragSrcEl = evt.target;
+
+        evt.dataTransfer.effectAllowed = 'move';
+        evt.dataTransfer.setData('text/html', evt.target.innerHTML);
+      }
+
+      _handleDragOver(evt) {
+        console.log('DragOver: '+evt.target.id);
+        if (evt.preventDefault) {
+          evt.preventDefault(); // Necessary. Allows us to drop.
+        }
+        evt.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+        return false;
+      }
+
+      _handleDragEnter(evt) {
+        console.log('DragEnter: '+evt.target.id);
+        evt.target.classList.add('over');
+        /*evt.target.style.borderTopWidth = "2px";
+        evt.target.style.borderTopColor = "black";
+        evt.target.style.borderTopStyle = "solid";*/
+
+      }
+
+      _handleDragLeave(evt) {
+        console.log('DragLeave: '+evt.target.id);
+        evt.target.classList.remove('over');
+        /*evt.target.style.borderTopWidth = "";
+        evt.target.style.borderTopColor = "";
+        evt.target.style.borderTopStyle = "";*/
+
+      }
+
+      _handleDrop(evt) {
+        // this / e.target is current target element.
+        console.log('DragDrop: '+evt.target.id);
+        if (evt.stopPropagation) {
+          evt.stopPropagation(); // stops the browser from redirecting.
+        }
+
+        if (this._dragSrcEl !== evt.target) {
+          //this._dragSrcEl.style.opacity = 1;
+
+          var source = [];
+          for (var i=0; i<this._dragSrcEl.childNodes.length; ++i) {
+              if (this._dragSrcEl.childNodes[i].textContent !== "") {
+                alert(this._dragSrcEl.childNodes[i].textContent);
+                  source.push(this._dragSrcEl.childNodes[i].textContent);
+              }
+          }
+
+          var target = [];
+          for (var i=0; i<evt.target.childNodes.length; ++i) {
+              if (evt.target.childNodes[i].textContent !== "") {
+                  target.push(evt.target.childNodes[i].textContent);
+              }
+          }
+
+
+          this.session.call("io.crossbar.app.nest", [
+            [this._dragSrcEl.id, source],
+            [evt.target.id, target]])
+            .then(
+              function (result) {
+                // call was successful
+                console.log(result);
+              },
+              this.session.log
+            )
+            .catch(
+              function (error) {
+                // call failed
+                console.log(error);
+              },
+              this.session.log
+            );
+
+          }
+        return false;
+      }
+
+      _handleDragEnd(evt) {
+        // this/e.target is the source node.
+        console.log('DragEnd: '+evt.target.id);
+        var cols = document.querySelectorAll('.card');
+        [].forEach.call(cols, function (col) {
+          col.classList.remove('over');
+        });
+      }
+
+      _handleDragOverHr(evt) {
+        console.log('DragOver: '+evt.target.tagName);
+        if (evt.preventDefault) {
+          evt.preventDefault(); // Necessary. Allows us to drop.
+        }
+        evt.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+        return false;
+      }
+
+      _handleDragEnterHr(evt) {
+        console.log('DragEnter: '+evt.target.tagName);
+        evt.target.style.borderWidth = "4px";
+
+      }
+
+      _handleDragLeaveHr(evt) {
+        console.log('DragLeave: '+evt.target.tagName);
+        evt.target.style.borderWidth = "";
+      }
+
+      _handleDropHr(evt) {
+        // this / e.target is current target element.
+        console.log('DragDrop: '+evt.target.tagName);
+        if (evt.stopPropagation) {
+          evt.stopPropagation(); // stops the browser from redirecting.
+        }
+
+        if (this._dragSrcEl !== evt.target) {
+
+          var source = [];
+          for (var i=0; i<this._dragSrcEl.childNodes.length; ++i) {
+              if (this._dragSrcEl.childNodes[i].textContent !== "") {
+                alert(this._dragSrcEl.childNodes[i].textContent);
+                  source.push(this._dragSrcEl.childNodes[i].textContent);
+              }
+          }
+
+          var target = [];
+          for (var i=0; i<evt.target.nextSibling.childNodes.length; ++i) {
+              if (evt.target.nextSibling.childNodes[i].textContent !== "") {
+                  target.push(evt.target.nextSibling.childNodes[i].textContent);
+              }
+          }
+
+          this.session.call("io.crossbar.app.reorder", [
+            [this._dragSrcEl.id, source],
+            [evt.target.nextSibling.id, target]])
+            .then(
+              function (result) {
+                // call was successful
+                console.log(result);
+              },
+              this.session.log
+            )
+            .catch(
+              function (error) {
+                // call failed
+                console.log(error);
+              },
+              this.session.log
+            );
+          }
+        return false;
       }
 
       _handleEditTask(evt) {
@@ -217,6 +444,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         //alert(evt.target.id)
         var correctID = evt.target.id.replace("del", "");
         //alert("Eliminando tarea "+ correctID);
+
         this.session.call("io.crossbar.app.deltask", [correctID])
           .then(this.session.log);
       }

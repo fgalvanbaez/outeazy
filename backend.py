@@ -43,7 +43,10 @@ class appBackend(ApplicationSession):
         self.init()
 
     def init(self):
-        self._task = {}
+        self._task = {
+                        'task0': ['tarea0', 'Subtarea0'],
+                        'task1': ['tarea1', 'Subtarea1'],
+                    }
         self._visitors = 0;
         #Conectar con base de datos y rescatar info
         #global conn
@@ -72,14 +75,22 @@ class appBackend(ApplicationSession):
     @wamp.register(u"io.crossbar.app.createtask")
     def submittask(self, JSONobjectID, JSONobject):
 
-        #Añadir el elemento la variable de python
-        self._task[JSONobjectID] = JSONobject
-        #item = {}
-        #item[JSONobjectID] = JSONobject
+        sub = JSONobjectID.split(".")
+        if (len(sub) < 2):
+
+            #Añadir el elemento la variable de python
+            self._task[JSONobjectID] = [JSONobject]
+            #item = {}
+            #item[JSONobjectID] = JSONobject
+
+
+        else:
+            self._task[sub[0]][int(sub[1])] = JSONobject
 
         #Publico el JSON sin tratamiento hacia las demás instancias
-        self.publish('io.crossbar.app.oncreatetask', [len(self._task), self._task])
-        #return self._task
+        #self.publish('io.crossbar.app.oncreatetask', [len(self._task), self._task])
+        self.publish('io.crossbar.app.updateall', [len(self._task), self._task])
+
 
 
     @wamp.register(u"io.crossbar.app.delall")
@@ -99,46 +110,75 @@ class appBackend(ApplicationSession):
     @wamp.register(u"io.crossbar.app.deltask")
     def deltask(self, id):
 
-        """
-        Eliminar tareaX
-        desde tareaX hasta final de tareas
-            tareaX = tareaX+1
-        del tareaX
+        sub = id.split(".")
+        if (len(sub) < 2):
+            ##Eliminar tareas desde la indicada
+            x = int(re.search(r'\d+', id).group())
+            if ((len(self._task)-1) > x):
+                while (x < (len(self._task)-1)):
 
-        """
+                    #convierto en json para cambiar el taskID
+                    #myJSON = json.loads(self._task["task"+str(x+1)])
 
-        ##Eliminar tareas desde la indicada
-        x = int(re.search(r'\d+', id).group())
-        if ((len(self._task)-1) > x):
-            while (x < (len(self._task)-1)):
+                    #modifico el id al correcto y varios atributos
+                    #myJSON['node']['id'] = "task"+str(x)
+                    #myJSON['node']['attributes']['id'] = "task"+str(x)
+                    #myJSON['node']['childNodes'][0]['childNodes'][0]['data'] = str(x)
+                    #myJSON['node']['childNodes'][0]['childNodes'][0]['nodeValue'] = str(x)
 
-                #convierto en json para cambiar el taskID
-                #myJSON = json.loads(self._task["task"+str(x+1)])
+                    #vuelvo a convertir en str
+                    self._task["task"+str(x)] = self._task["task"+str(x+1)]
 
-                #modifico el id al correcto y varios atributos
-                #myJSON['node']['id'] = "task"+str(x)
-                #myJSON['node']['attributes']['id'] = "task"+str(x)
-                #myJSON['node']['childNodes'][0]['childNodes'][0]['data'] = str(x)
-                #myJSON['node']['childNodes'][0]['childNodes'][0]['nodeValue'] = str(x)
+                    #Aumento contador
+                    x += 1
 
-                #vuelvo a convertir en str
-                self._task["task"+str(x)] = self._task["task"+str(x+1)]
+                del self._task["task"+str(x)]
+            else:
+                del self._task[id]
 
-                """#busco la subcadena taskID y lo reemplazo por el correcto
-                mySTR = self._task["task"+str(x+1)].replace(("task"+str(x+1)), ("task"+str(x)))
-
-                #Actualizo el valor en el correcto
-                self._task["task"+str(x)] = mySTR"""
-
-                #Aumento contador
-                x += 1
-
-            del self._task["task"+str(x)]
         else:
-            del self._task[id]
+            self._task[sub[0]].pop(int(sub[1]))
+
 
         self.publish('io.crossbar.app.updateall', [len(self._task), self._task])
         #return self._task
+
+
+    @wamp.register("io.crossbar.app.nest")
+    def nest(self, source, target):
+
+        for i in source[1]:
+            self._task[target[0]].append(i)
+
+        self.deltask(source[0])
+        self.publish('io.crossbar.app.updateall', [len(self._task), self._task])
+
+
+    @wamp.register("io.crossbar.app.reorder")
+    def reorder(self, source, target):
+
+        sourceID = int(re.search(r'\d+', source[0]).group())
+        targetID = int(re.search(r'\d+', target[0]).group())
+
+        #Si bajo el elemento
+        if (sourceID < targetID):
+            x = sourceID
+            while (x < targetID):
+                self._task['task'+str(x)] = self._task['task'+str(x+1)]
+                x += 1
+            #finalmente se asigna el valor de la tarea movida en
+            #el puesto que le corresponde
+            self._task['task'+str(targetID)] = source[1]
+
+        else:
+            x = sourceID
+            while (x > targetID):
+                self._task['task'+str(x)] = self._task['task'+str(x-1)]
+                x -= 1
+
+            self._task['task'+str(targetID)] = source[1]
+
+        self.publish('io.crossbar.app.updateall', [len(self._task), self._task])
 
 
     @inlineCallbacks

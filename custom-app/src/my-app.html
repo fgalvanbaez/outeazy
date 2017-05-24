@@ -253,10 +253,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           //var nuevaTarea = document.createElement("div");
 
           var myStr = this.$.tTask.value;
+          var myId = "task"+this.idTask;
+
 
           /*Genera una tarea un la envia al backend, el backend se encarga
           de hacer un publish con la nueva tarea incluida esta misma sesion*/
-          this.session.call("io.crossbar.app.createtask", [("task"+this.idTask), myStr])
+          this.session.call("io.crossbar.app.createtask", [myId, myStr])
             .then(this.session.log);
             /*.then(this._handleTask.bind(this), this.session.log)
             .catch(this._handleError.bind(this));*/
@@ -341,16 +343,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           .catch(this._handleError.bind(this));
 
         //Actualizo el número de tareas
-        this.session.call("io.crossbar.app.gettask").
-          then(this._handleTask.bind(this), this.session.log).
-          catch(this._handleError.bind(this), this.session.log);
+        this.session.call("io.crossbar.app.gettask")
+          .then(this._handleTask.bind(this), this.session.log)
+          .catch(this._handleError.bind(this), this.session.log);
 
         //Me subscribo al metodo para actualizar el número de tareas
-        this.session.subscribe(
+        /*this.session.subscribe(
           "io.crossbar.app.oncreatetask",
           this._handleTask.bind(this))
           .then(this.session.log)
-          .catch(this._handleError.bind(this));
+          .catch(this._handleError.bind(this));*/
 
         //Me subscribo al metodo para indicar que se ha almacenado la lista
         this.session.subscribe(
