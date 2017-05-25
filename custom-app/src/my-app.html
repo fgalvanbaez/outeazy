@@ -258,7 +258,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           /*Genera una tarea un la envia al backend, el backend se encarga
           de hacer un publish con la nueva tarea incluida esta misma sesion*/
-          this.session.call("io.crossbar.app.createtask", [myId, myStr])
+          this.session.call("io.crossbar.app.createtask", [myId, [myStr]])
             .then(this.session.log);
             /*.then(this._handleTask.bind(this), this.session.log)
             .catch(this._handleError.bind(this));*/

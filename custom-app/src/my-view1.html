@@ -190,7 +190,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var child = document.createElement('div');
           child.id = key+"."+x;
           child.classList.add('card');
-          //child.setAttribute('draggable', 'true');
+          child.setAttribute('draggable', 'true');
 
           var content = document.createTextNode(this.taskList[key][x]);
           child.appendChild(content);
@@ -275,7 +275,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var source = [];
           for (var i=0; i<this._dragSrcEl.childNodes.length; ++i) {
               if (this._dragSrcEl.childNodes[i].textContent !== "") {
-                alert(this._dragSrcEl.childNodes[i].textContent);
+                //alert(this._dragSrcEl.childNodes[i].textContent);
                   source.push(this._dragSrcEl.childNodes[i].textContent);
               }
           }
@@ -351,7 +351,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var source = [];
           for (var i=0; i<this._dragSrcEl.childNodes.length; ++i) {
               if (this._dragSrcEl.childNodes[i].textContent !== "") {
-                alert(this._dragSrcEl.childNodes[i].textContent);
+                //alert(this._dragSrcEl.childNodes[i].textContent);
                   source.push(this._dragSrcEl.childNodes[i].textContent);
               }
           }
@@ -362,6 +362,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                   target.push(evt.target.nextSibling.childNodes[i].textContent);
               }
           }
+
 
           this.session.call("io.crossbar.app.reorder", [
             [this._dragSrcEl.id, source],
@@ -380,57 +381,85 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               },
               this.session.log
             );
+
           }
         return false;
       }
 
       _handleEditTask(evt) {
+        var id = "#mod"+evt.target.id;
+        //if (this.shadowRoot.querySelector(id) === null) {
+          var fab = document.createElement('paper-fab');
+          fab.id = 'save'+evt.target.id;
+          fab.slot="suffix";
+          fab.icon="icons:add";
+          fab.mini=true;
+          fab.addEventListener('tap', this._postTask.bind(this));
+          fab.addEventListener('keydown', this._checkForEnter.bind(this));
 
-        //alert('#mod'+evt.target.id);
-        //evt.target.icon = "icons:close";
+          var close = document.createElement('paper-fab');
+          close.id = "close"+evt.target.id;
+          close.slot="suffix";
+          close.icon="icons:close";
+          close.mini=true;
+          close.addEventListener('tap', this._handleDelModTask.bind(this));
 
-        /*var edits = document.querySelector('.edit');
-        if (edits.length > 0) {
-          this.$.lista.removeChild(edits);
-        }*/
+          var input = document.createElement('paper-input');
+          input.id = "mod"+evt.target.id;
+          input.value = evt.target.parentNode.childNodes[0].textContent;
+          input.setAttribute('class', 'card edit');
 
-        //evt.target.addEventListener('tap', this._handleDelModTask.bind(this));
+          input.appendChild(fab);
+          input.appendChild(close);
 
-        var fab = document.createElement('paper-fab');
-        fab.id = evt.target.id.replace('edit', '');
-        fab.slot="suffix";
-        fab.icon="icons:add";
-        fab.mini=true;
-        fab.addEventListener('tap', this._postTask.bind(this));
 
-        var input = document.createElement('paper-input');
-        input.id = "mod"+evt.target.id;
-        input.value = evt.target.parentNode.innerText;
-        input.appendChild(fab);
-        input.setAttribute('class', 'card edit');
-
-        //this.$.lista.removeChild(evt.target.parentNode);
-        evt.target.parentNode.parentNode.insertBefore(input, evt.target.parentNode.nextSibling);
+          evt.target.parentNode.appendChild(input);
+          //this.$.lista.removeChild(evt.target.parentNode);
+          //evt.target.parentNode.parentNode.insertBefore(input, evt.target.parentNode.nextSibling);
+        //}
 
       }
 
       _handleDelModTask(evt) {
-        this.$.lista.removeChild(document.querySelector('#mod'+evt.target.id));
+        //alert(evt.target.id);
+        evt.target.parentNode.parentNode.removeChild(evt.target.parentNode);
       }
 
       _postTask(evt) {
 
-        //alert("Modificando tarea "+evt.target.id);
-        if (evt.target.parentNode.value) {
-          console.log(evt.target.parentNode.value);
-          console.log(evt.target.parentNode.id);
-          //var nuevaTarea = document.createElement("div");
+        alert("Modificando tarea "+evt.target.id);
 
-          var myStr = evt.target.parentNode.value;
+        if (evt.target.parentNode.value) {
+
+          var idSub = evt.target.id.replace("saveedit", '');
+          idSub = idSub.split(".");
+          //alert("#"+idSub[0]);
+          var task = this.shadowRoot.querySelector("#"+idSub[0]);
+          var source = [];
+          //alert(task.id);
+          //source.push(evt.target.parentNode.value);
+          for (var i=0; i<task.childNodes.length; ++i) {
+            //alert(task.childNodes[i].textContent);
+            if (task.childNodes[i].textContent !== "") {
+              //alert(this._dragSrcEl.childNodes[i].textContent);
+              //alert(task.childNodes[i].textContent);
+                source.push(task.childNodes[i].textContent);
+            }
+          }
+
+          if (idSub.length > 1) {
+            source[idSub[1]] = evt.target.parentNode.value;
+          } else {
+            source[0] = evt.target.parentNode.value;
+          }
+
+          console.log(evt.target.parentNode.value);
+          console.log(idSub[0]);
+          //var nuevaTarea = document.createElement("div");
 
           /*Genera una tarea un la envia al backend, el backend se encarga
           de hacer un publish con la nueva tarea incluida esta misma sesion*/
-          this.session.call("io.crossbar.app.createtask", [evt.target.id, myStr])
+          this.session.call("io.crossbar.app.createtask", [idSub[0], source])
             .then(this.session.log);
             /*.then(this._handleTask.bind(this), this.session.log)
             .catch(this._handleError.bind(this));*/
@@ -438,6 +467,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           //this.$.tTask.value = "";
         }
 
+      }
+
+      _checkForEnter(evt) {
+        if (evt.keyCode === 13) {
+          this._postTask();
+        }
       }
 
       _handleDelTask(evt) {

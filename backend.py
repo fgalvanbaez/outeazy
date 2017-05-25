@@ -76,16 +76,16 @@ class appBackend(ApplicationSession):
     def submittask(self, JSONobjectID, JSONobject):
 
         sub = JSONobjectID.split(".")
-        if (len(sub) < 2):
+        #if (len(sub) < 2):
 
             #Añadir el elemento la variable de python
-            self._task[JSONobjectID] = [JSONobject]
+        self._task[sub[0]] = JSONobject
             #item = {}
             #item[JSONobjectID] = JSONobject
 
 
-        else:
-            self._task[sub[0]][int(sub[1])] = JSONobject
+        #else:
+            #self._task[sub[0]] = JSONobject
 
         #Publico el JSON sin tratamiento hacia las demás instancias
         #self.publish('io.crossbar.app.oncreatetask', [len(self._task), self._task])
@@ -160,6 +160,12 @@ class appBackend(ApplicationSession):
         sourceID = int(re.search(r'\d+', source[0]).group())
         targetID = int(re.search(r'\d+', target[0]).group())
 
+        sub = source[0].split(".")
+        if (len(sub) > 1):
+            self._task['task'+str(len(self._task))] = source[1]
+            self._task[sub[0]].pop(int(sub[1]))
+            sourceID = len(self._task)-1
+
         #Si bajo el elemento
         if (sourceID < targetID):
             x = sourceID
@@ -177,6 +183,7 @@ class appBackend(ApplicationSession):
                 x -= 1
 
             self._task['task'+str(targetID)] = source[1]
+
 
         self.publish('io.crossbar.app.updateall', [len(self._task), self._task])
 
