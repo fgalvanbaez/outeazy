@@ -1,79 +1,91 @@
 {
     "version": 2,
-    "controller": {},
+    "controller": {
+      "id": "mynode1",
+      "options": {
+        "title": "mycontroller"
+      }
+    },
     "workers": [
         {
-            "type": "router",
-            "options": {
-                "pythonpath": [
-                    ".."
-                ]
-            },
-            "realms": [
-                {
-                    "name": "public",
-                    "roles": [
-                        {
-                            "name": "anonymous",
-                            "permissions": [
-                              {
-                                "uri": "wamp.*",
-                                "allow": {
-                                  "call": true,
-                                  "register": false,
-                                  "subscribe": true,
-                                  "publish": false
-                                }
-                              },
-                              {
-                                "uri": "io.crossbar.app.",
-                                "match": "prefix",
-                                "allow": {
-                                    "call": true,
-                                    "register": true,
-                                    "publish": true,
-                                    "subscribe": true
-                                },
-                                "disclose": {
-                                    "caller": false,
-                                    "publisher": false
-                                },
-                                "cache": true
+          "id": "myworker1",
+          "type": "router",
+          "options": {
+            "title": "myworker",
+
+            "pythonpath": [
+                ".."
+            ],
+            "cpu_affinity": [],
+            "reactor":{},
+            "env":{}
+          },
+          "realms": [
+              {
+                  "name": "public",
+                  "roles": [
+                      {
+                          "name": "anonymous",
+                          "permissions": [
+                            {
+                              "uri": "wamp.*",
+
+                              "allow": {
+                                "call": true,
+                                "register": false,
+                                "subscribe": true,
+                                "publish": false
                               }
-                            ]
-                        }
-                    ]
-                }
-            ],
-            "transports": [
-                {
-                    "type": "web",
-                    "endpoint": {
-                        "type": "tcp",
-                        "port": 8080
-                    },
-                    "paths": {
-                        "/": {
-                            "type": "static",
-                            "directory": "../"
-                        },
-                        "ws": {
-                            "type": "websocket"
-                        },
-                        "lp": {
-                            "type": "longpoll"
-                        }
-                    }
-                }
-            ],
-            "components": [
-                {
-                    "type": "class",
-                    "classname": "backend.appBackend",
-                    "realm": "public",
-                    "role": "anonymous"
-                }
-            ]
+                            },
+                            {
+                              "uri": "io.crossbar.app.",
+                              "match": "prefix",
+                              "allow": {
+                                  "call": true,
+                                  "register": true,
+                                  "publish": true,
+                                  "subscribe": true
+                              },
+                              "disclose": {
+                                  "caller": false,
+                                  "publisher": false
+                              },
+                              "cache": true
+                            }
+                          ]
+                      }
+                  ]
+              }
+          ],
+          "transports": [
+              {
+                  "type": "web",
+                  "endpoint": {
+                      "type": "tcp",
+                      "port": 8080
+                  },
+                  "paths": {
+                      "/": {
+                          "type": "static",
+                          "directory": "../"
+                      },
+                      "ws": {
+                          "type": "websocket"
+                      },
+                      "lp": {
+                          "type": "longpoll"
+                      }
+                  }
+              }
+          ],
+          "components": [
+              {
+                  "type": "class",
+                  "classname": "backend.appBackend",
+                  "realm": "public",
+                  "role": "anonymous"
+              }
+          ]
         }
     ]
 }
