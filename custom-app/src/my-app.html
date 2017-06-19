@@ -149,6 +149,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </div>
             </div>
 
+            <!--MY-VIEW1 WEB COMPONENT-->
             <my-view1
               name="view1"
               session="{{session}}"
@@ -249,24 +250,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       _postTask() {
         if (this.$.tTask.value) {
-          console.log(this.$.tTask.value);
-          //var nuevaTarea = document.createElement("div");
 
+          console.log(this.$.tTask.value);
+
+          //Recojo el valor del input (outline)
           var myStr = this.$.tTask.value;
+
+          //Asigno un id al outline
           var myId = "task"+this.idTask;
 
-
-          /*Genera una tarea un la envia al backend, el backend se encarga
-          de hacer un publish con la nueva tarea incluida esta misma sesion*/
+          /*
+          Realizo una llamada al 'procedure' "io.crossbar.app.createtask"
+          y envio como parámetros el id de tarea y el valor
+          */
           this.session.call("io.crossbar.app.createtask", [myId, [myStr]])
             .then(this.session.log);
-            /*.then(this._handleTask.bind(this), this.session.log)
-            .catch(this._handleError.bind(this));*/
+
 
           this.$.tTask.value = "";
 
-        } else {
-          //alert("el input es undefined");
         }
       }
 
@@ -328,40 +330,53 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       _sessionChanged() {
 
         this.session.log("Session open my-app: "+ this.session.id);
-        //this.$.here.innerText = this.session.id;
 
-        //Actualizo el numero de sesiones abiertas actuales
+        /*
+        Ésta función llama al 'procedure' "io.crossbar.app.getvisitors"
+        cuando se inicia la sesión para actualizar el número de
+        sesiones abiertas. Crossbar.io devuelve las sesiones actuales
+        activas
+        */
         this.session.call("io.crossbar.app.getvisitors")
           .then(this._handleVisitor.bind(this), this.session.log)
           .catch(this._handleError.bind(this), this.session.log);
 
-        //Me subscribo al metodo para actualizar las sesiones
+        /*
+        Ésta función se suscribe al 'topic' "io.crossbar.app.visitorupdate"
+        y se encarga de actualizar el número de sesiones cada vez que cambian.
+        Crossbar.io devuelve los outlines actuales
+        */
         this.session.subscribe(
           "io.crossbar.app.visitorupdate",
           this._handleVisitor.bind(this))
           .then(this.session.log)
           .catch(this._handleError.bind(this));
 
-        //Actualizo el número de tareas
+        /*
+        Ésta función llama al 'procedure' "io.crossbar.app.gettask" cuando
+        se inicia la sesiones para actualizar el número de outlines
+        existentes. Crossbar.io devuelve el número de tareas actuales
+        */
         this.session.call("io.crossbar.app.gettask")
           .then(this._handleTask.bind(this), this.session.log)
           .catch(this._handleError.bind(this), this.session.log);
 
-        //Me subscribo al metodo para actualizar el número de tareas
-        /*this.session.subscribe(
-          "io.crossbar.app.oncreatetask",
-          this._handleTask.bind(this))
-          .then(this.session.log)
-          .catch(this._handleError.bind(this));*/
-
-        //Me subscribo al metodo para indicar que se ha almacenado la lista
+        /*
+        Ésta función se suscribe al 'topic' "io.crossbar.app.updatesavetime"
+        y simula un guardado de los outlines en memoria. Crossbar.io no envía
+        nada en este caso.
+        */
         this.session.subscribe(
           "io.crossbar.app.updatesavetime",
           this._handleSave.bind(this))
           .then(this.session.log)
           .catch(this._handleError.bind(this));
 
-        //Me subscribo al metodo para actualizar la lista en caso de una eliminacion
+        /*
+        Ésta función se suscribe al 'topic' "io.crossbar.app.updateall"
+        y actualiza la propiedad 'taskList' del elemento. Crossbar.io devuelve
+        la lista de tareas actualizadas.
+        */
         this.session.subscribe(
           "io.crossbar.app.updateall",
           this._handleTask.bind(this))
@@ -369,7 +384,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           .catch(this._handleError.bind(this));
 
 
-          //NO esta funcionando este listener
+        /*
+        Al presionar 'enter' se ejecuta la función para crear una nueva
+        tarea
+        */
         this.$.tTask.addEventListener("keypress",
           function (evt) {
             var key = evt.which || evt.keyCode;

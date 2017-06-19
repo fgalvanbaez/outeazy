@@ -125,16 +125,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         console.log(this.localName + '#' + 'disconnectedCallback');
       }
 
+      /*
+      Función que genera un outline y los posibles datos anidados que
+      contenga éste y lo agrega al documento. Durante el proceso de
+      generación se la añaden algunas características como la
+      posibilidad de arrastrar y soltar el outline.
+      */
       _generateTask(key) {
-        //Convierto str a JSON object
-        //var myJSON = JSON.parse(args[0][1]["task"+x]);
-        //var myJSON = JSON.parse(this.taskList[key]);
-        //alert(args[0][1]["task"+x])
-        //var idTask = key.replace('task', '');
-        //convierto el JSON object en un nodo del DOM
-        //var nodo = domJSON.toDOM(myJSON);
+
+        //Elemento para la ordenación de los outlines con DnD
         var mark = document.createElement('hr');
-        //mark.hidden = true;
         mark.addEventListener('dragenter', this._handleDragEnterHr.bind(this));
         mark.addEventListener('dragover', this._handleDragOverHr.bind(this));
         mark.addEventListener('dragleave', this._handleDragLeaveHr.bind(this));
@@ -143,15 +143,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         mark.style.width = "75%";
         this.$.lista.appendChild(mark);
 
-
+        //Nodo a generar
         var node = document.createElement("div");
         var myStr = this.taskList[key][0];
-
-        /*var index = document.createElement('div');
-        index.setAttribute('class', 'circle');
-        index.innerText = key.replace('task', '');
-        node.appendChild(index);*/
-
         var valor = document.createTextNode(myStr);
         node.appendChild(valor);
 
@@ -176,6 +170,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         btn.addEventListener('tap', this._handleDelTask.bind(this));
         node.appendChild(btn);
 
+        //Añado los listener para la funcionalidad DnD
         node.addEventListener('dragstart', this._handleDragStart.bind(this));
         node.addEventListener('dragenter', this._handleDragEnter.bind(this));
         node.addEventListener('dragover', this._handleDragOver.bind(this));
@@ -184,6 +179,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         node.addEventListener('dragend', this._handleDragEnd.bind(this));
 
 
+        //Generación de los elementos anidados
         var x;
         for (x=1; x<this.taskList[key].length; x++) {
 
@@ -210,14 +206,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           b.style.textAlign = 'right';
           b.addEventListener('tap', this._handleDelTask.bind(this));
           child.appendChild(b);
-
-          /*child.addEventListener('dragstart', this._handleDragStartChild.bind(this));
-          child.addEventListener('dragenter', this._handleDragEnterChild.bind(this));
-          child.addEventListener('dragover', this._handleDragOverChild.bind(this));
-          child.addEventListener('dragleave', this._handleDragLeaveChild.bind(this));
-          child.addEventListener('drop', this._handleDropChild.bind(this));
-          child.addEventListener('dragend', this._handleDragEndChild.bind(this));
-          */
           node.appendChild(child);
         }
 
@@ -386,6 +374,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return false;
       }
 
+      /*
+      
+      */
       _handleEditTask(evt) {
         var id = "#mod"+evt.target.id;
         //if (this.shadowRoot.querySelector(id) === null) {
@@ -487,12 +478,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       //observers
       _sessionChanged() {
         this.session.log("Session open my-view1: "+ this.session.id);
-        //alert("La sesion esta creada aqui");
-        //this._taskListChanged();
-        //this._createPropertyObserver('taskList', '_taskListChanged', true);
       }
 
-      _taskListChanged(session, taskList) {
+      /*
+      Observer que cuando la propiedad 'taskList' cambia de valor elimina
+      todos los outlines y genera los nuevos
+      */
+      _taskListChanged() {
         console.log("Me llego algo: "+Object.keys(this.taskList).length);
         var ntasks = Object.keys(this.taskList).length;
         while (this.$.lista.firstChild) {
